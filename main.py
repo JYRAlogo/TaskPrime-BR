@@ -12,8 +12,8 @@ from typing import Optional
 import os
 
 app = FastAPI(
-    title="TaskPrime BR",
-    description="Automação Sala do Futuro | HACKER EDITION",
+    title="TASK PRIME LEGION",
+    description="Automação Sala do Futuro | HACKER LEGION",
     version="3.0.0-GOD"
 )
 
@@ -86,7 +86,7 @@ def solve_captcha(cookies={}):
     except:
         return ''
 
-# ─── LÓGICA DE BUSCA (CORRIGIDA 100% - AGORA TRAZ TUDO) ──────────────────────
+# ─── LÓGICA DE BUSCA = IGUAL AO SEU CÓDIGO ANTIGO QUE FUNCIONAVA 100% ────────
 def do_login(ra, senha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     captcha = solve_captcha(cookies)
@@ -136,6 +136,7 @@ def do_login(ra, senha, cf=None):
         time.sleep(2)
     raise Exception('Falha ao trocar token após 5 tentativas')
 
+# ✅ FUNÇÃO DE BUSCA EXATA DO SEU CÓDIGO QUE DAVA CERTO
 def do_get_tasks(token, captcha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     
@@ -213,7 +214,7 @@ def do_get_tasks(token, captcha, cf=None):
 
     return {'pending': pendentes, 'expired': expiradas, 'captcha': captcha}
 
-# CORRIGIDO ERRO 404/500
+# ✅ CORRIGIDO: SEM ERRO 404/500 AO FINALIZAR
 def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=None, draft=False, score=100):
     cookies = {'cf_clearance': cf} if cf else {}
     cap = solve_captcha(cookies)
@@ -222,7 +223,7 @@ def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=N
         f'{BASE}/p/https://edusp-api.ip.tv/tms/task/{task_id}/apply/?preview_mode=false&room_code={publication_target}',
         headers=headers_auth(token, cap), cookies=cookies)
     if s not in (200, 304):
-        raise Exception(f'Erro ao carregar: {s}')
+        raise Exception(f'Erro ao carregar atividade: {s}')
     
     wait = max(lesson.get('min_execution_time') or 60, wait_sec)
     time.sleep(wait)
@@ -248,7 +249,7 @@ def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=N
 
     if s2 in (200, 201, 304):
         return {'success': True}
-    raise Exception(f'Falha: {s2}')
+    raise Exception(f'Falha: {s2} - {res}')
 
 # ─── MODELS ──────────────────────────────────────────────────────────────────
 class LoginBody(BaseModel):
@@ -300,7 +301,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND HACKER GOD EDITION ──────────────────────────────────────────────
+# ─── FRONTEND: ESTILO HACKER + BORDAS REDONDAS + TUDO PRETO ─────────────────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -330,13 +331,12 @@ HTML_CONTENT = """
                         'hacker-green': '#00FF00',
                         'hacker-red': '#FF0000',
                         'hacker-blue': '#0088FF',
-                        'hacker-yellow': '#FFFF00',
                     },
                     fontFamily: {
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     borderRadius: {
-                        'hacker': '24px',
+                        'hacker': '28px',
                     }
                 }
             }
@@ -345,77 +345,54 @@ HTML_CONTENT = """
     <style type="text/tailwindcss">
         @layer utilities {
             .content-auto { content-visibility: auto; }
-            .scrollbar-hide {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             .scrollbar-hide::-webkit-scrollbar { display: none; }
-            .backdrop-blur-custom {
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-            }
-            .transition-all-smooth {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .glow-green {
-                text-shadow: 0 0 8px #00FF00;
-            }
-            .glow-red {
-                text-shadow: 0 0 8px #FF0000;
-            }
-            .glow-blue {
-                box-shadow: 0 0 12px #0088FF40;
-            }
-            .glow-green-btn {
-                box-shadow: 0 0 16px #00FF0040;
-            }
+            .backdrop-blur-custom { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+            .transition-all-smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .glow-green { text-shadow: 0 0 8px #00FF00; }
+            .glow-border { box-shadow: 0 0 12px #00FF0020; }
         }
     </style>
 </head>
 <body class="bg-hacker-black text-green-400 font-mono min-h-screen flex flex-col overflow-x-hidden selection:bg-green-500 selection:text-black">
-    <!-- Matrix Background Effect -->
-    <div class="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#001a00_0%,_#000000_70%)]"></div>
-    <div class="fixed inset-0 z-0 opacity-10">
-        <div class="h-full w-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-    </div>
+    <div class="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#001200_0%,_#000000_70%)]"></div>
 
-    <!-- Container Principal -->
     <main class="relative z-10 w-full min-h-screen flex items-center justify-center p-4">
         
-        <!-- Tela de Login -->
+        <!-- Login -->
         <section id="login-screen" class="w-full max-w-md transition-all-smooth opacity-100 scale-100">
-            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl p-6 md:p-8 glow-blue">
+            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl p-6 md:p-8 glow-border">
                 <div class="text-center mb-8">
                     <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-black text-green-400 glow-green mb-2 tracking-wider">
                         &lt;/&gt; TASK_PRIME
                     </h1>
-                    <p class="text-green-500/70 text-sm font-semibold">// HACKER EDITION // GOD MODE ACTIVE</p>
+                    <p class="text-green-500/70 text-sm">// HACKER EDITION // GOD MODE</p>
                 </div>
 
                 <form id="login-form" class="space-y-5">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">&gt; RA</label>
-                        <input type="text" id="ra" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/50 transition-all-smooth" placeholder="INPUT_RA">
+                    <div>
+                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; RA</label>
+                        <input type="text" id="ra" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="INPUT_RA">
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">&gt; SENHA</label>
-                        <input type="password" id="senha" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/50 transition-all-smooth" placeholder="INPUT_PASSWORD">
+                    <div>
+                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; SENHA</label>
+                        <input type="password" id="senha" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="INPUT_PASS">
                     </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">&gt; CF_TOKEN (OPCIONAL)</label>
-                        <input type="text" id="cf" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/50 transition-all-smooth" placeholder="CLOUDFLARE_BYPASS">
+                    <div>
+                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; CF_TOKEN (OPCIONAL)</label>
+                        <input type="text" id="cf" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="BYPASS_CLOUDFLARE">
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-green-btn mt-2 tracking-wider uppercase">
+                    <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-2 uppercase">
                         &gt; EXECUTAR_LOGIN
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- MODAL DE SELEÇÃO - HACKER STYLE -->
+        <!-- Modal Principal -->
         <section id="main-modal" class="hidden w-full max-w-lg transition-all-smooth opacity-0 scale-95">
-            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl overflow-hidden glow-blue">
+            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl overflow-hidden glow-border">
                 
                 <!-- Cabeçalho -->
                 <div class="flex items-center justify-between p-5 border-b border-green-600/30 bg-green-900/10">
@@ -425,43 +402,43 @@ HTML_CONTENT = """
                     </button>
                 </div>
 
-                <!-- Lista de Atividades -->
+                <!-- Lista -->
                 <div class="p-5 max-h-[65vh] overflow-y-auto scrollbar-hide">
                     <label class="flex items-center gap-3 mb-6 text-green-300 font-bold cursor-pointer">
                         <input type="checkbox" id="select-all" class="w-5 h-5 accent-green-500 rounded-sm">
-                        <span class="tracking-wide">&gt; SELECIONAR_TODOS</span>
+                        <span>&gt; SELECIONAR_TODOS</span>
                     </label>
 
                     <div id="tasks-list" class="space-y-3 mb-6">
-                        <div class="text-center text-green-700/70 py-6 font-bold tracking-wider">// AGUARDANDO_COMANDO... <br><br> CLICK: BUSCAR_ATIVIDADES</div>
+                        <div class="text-center text-green-700/70 py-6 font-bold">// CLICK: BUSCAR_ATIVIDADES</div>
                     </div>
 
                     <p class="text-xs text-green-600/60 mb-6 italic">
-                        * DEFINE_PONTUACAO: VALORES_BAIXOS = MAIOR_RISCO_DE_FALHA
+                        * PONTUACAO: VALOR < 100 = MAIOR_CHANCE_ERRO
                     </p>
 
-                    <!-- Tempo de Estudo -->
+                    <!-- Tempo -->
                     <div class="grid grid-cols-2 gap-5 mb-2">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-bold text-green-400">&gt; TEMPO_MIN (MIN)</label>
-                            <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold focus:outline-none focus:border-green-400">
+                        <div>
+                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; TEMPO_MIN (MIN)</label>
+                            <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
                         </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm font-bold text-green-400">&gt; TEMPO_MAX (MIN)</label>
-                            <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold focus:outline-none focus:border-green-400">
+                        <div>
+                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; TEMPO_MAX (MIN)</label>
+                            <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
                         </div>
                     </div>
                 </div>
 
-                <!-- Botões de Ação -->
+                <!-- Botões -->
                 <div class="p-5 border-t border-green-600/30 bg-green-900/10 space-y-3">
-                    <button id="btn-run" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-green-btn tracking-wider uppercase">
+                    <button id="btn-run" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border uppercase">
                         &gt; EXECUTAR_SELECIONADAS
                     </button>
-                    <button id="btn-draft" class="w-full py-2.5 bg-hacker-gray border border-green-800/50 text-green-700/50 rounded-hacker cursor-not-allowed font-bold tracking-wider">
-                        // SALVAR_RASCUNHO [EM_BREVE]
+                    <button id="btn-draft" class="w-full py-2.5 bg-hacker-gray border border-green-800/50 text-green-700/50 rounded-hacker cursor-not-allowed uppercase">
+                        // RASCUNHO
                     </button>
-                    <button id="btn-refresh" class="w-full py-2.5 bg-hacker-light-gray hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-sm font-bold tracking-wider border border-green-700/30">
+                    <button id="btn-refresh" class="w-full py-2.5 bg-hacker-light-gray hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-sm font-bold border border-green-700/30 uppercase">
                         <i class="fa fa-refresh mr-2"></i> BUSCAR_ATIVIDADES
                     </button>
                 </div>
@@ -474,25 +451,18 @@ HTML_CONTENT = """
     <div id="notifications" class="fixed top-5 right-5 z-50 space-y-3 w-full max-w-xs"></div>
 
     <script>
-        let state = {
-            token: null,
-            captcha: null,
-            cf: null,
-            tasks: [],
-            selected: new Set(),
-            running: false
-        };
+        let state = { token: null, captcha: null, cf: null, tasks: [], running: false };
 
         function notify(msg, type='info'){
             const cont = document.getElementById('notifications');
             const colors = {
-                success: 'bg-green-900/80 border-green-400 text-green-300 glow-green',
-                error: 'bg-red-900/80 border-red-400 text-red-300 glow-red',
+                success: 'bg-green-900/80 border-green-400 text-green-300',
+                error: 'bg-red-900/80 border-red-400 text-red-300',
                 info: 'bg-blue-900/80 border-blue-400 text-blue-300'
             };
             const el = document.createElement('div');
-            el.className = `p-4 rounded-hacker border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 font-bold tracking-wider ${colors[type]}`;
-            el.innerHTML = `<div class="flex items-start gap-3"><i class="fa ${type==='success'?'fa-check-circle':'fa-exclamation-triangle'} text-lg"></i><span>${msg}</span></div>`;
+            el.className = `p-4 rounded-hacker border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 font-bold ${colors[type]}`;
+            el.innerHTML = `<div class="flex items-start gap-3"><i class="fa ${type==='success'?'fa-check-circle':'fa-exclamation-triangle'}"></i><span>${msg}</span></div>`;
             cont.appendChild(el);
             setTimeout(()=>el.classList.replace('opacity-0','opacity-100'),10);
             setTimeout(()=>{el.classList.add('opacity-0','translate-x-4');setTimeout(()=>el.remove(),300)},4000);
@@ -502,8 +472,7 @@ HTML_CONTENT = """
         document.getElementById('login-form').addEventListener('submit', async e=>{
             e.preventDefault();
             const btn = e.target.querySelector('button');
-            btn.disabled=true; 
-            btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> PROCESSANDO...';
+            btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> PROCESSANDO...';
             try{
                 const res = await fetch('/api/login',{
                     method:'POST',
@@ -521,7 +490,7 @@ HTML_CONTENT = """
                 state.captcha=d.captcha;
                 state.cf=document.getElementById('cf').value.trim()||null;
 
-                notify(`ACESSO_PERMITIDO: ${d.nome.toUpperCase()}`,`success`);
+                notify(`ACESSO_PERMITIDO: ${d.nome.toUpperCase()}`,'success');
                 
                 document.getElementById('login-screen').classList.add('opacity-0','scale-95');
                 setTimeout(()=>{
@@ -532,14 +501,13 @@ HTML_CONTENT = """
                 },300);
 
             }catch(err){
-                notify(`ERRO_LOGIN: ${err.message}`,'error');
+                notify(`ERRO: ${err.message}`,'error');
             }finally{
-                btn.disabled=false; 
-                btn.innerHTML='&gt; EXECUTAR_LOGIN';
+                btn.disabled=false; btn.innerHTML='&gt; EXECUTAR_LOGIN';
             }
         });
 
-        // ✅ BUSCA CORRIGIDA - AGORA TRAZ TUDO
+        // ✅ BUSCA CORRIGIDA = MESMA LÓGICA DO SEU CÓDIGO QUE FUNCIONAVA
         document.getElementById('btn-refresh').addEventListener('click', async ()=>{
             try{
                 notify('SOLICITANDO_DADOS...','info');
@@ -562,18 +530,14 @@ HTML_CONTENT = """
                 }
 
             }catch(err){
-                notify(`FALHA_BUSCA: ${err.message}`,'error');
+                notify(`FALHA: ${err.message}`,'error');
             }
         });
 
-        // Renderizar estilo Hacker
         function renderTasks(list){
             const el = document.getElementById('tasks-list');
             el.innerHTML='';
-            if(!list.length){
-                el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold glow-red">// VAZIO //</div>';
-                return;
-            }
+            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">// VAZIO //</div>';return;}
             
             list.forEach((t, i)=>{
                 const div=document.createElement('div');
@@ -583,9 +547,9 @@ HTML_CONTENT = """
                 div.innerHTML=`
                     <label class="flex items-center gap-3 flex-1 cursor-pointer">
                         <input type="checkbox" class="task-checkbox w-4 h-4 accent-green-500 rounded-sm">
-                        <span class="text-sm text-green-300 line-clamp-1 font-mono">&gt; TASK_${i+1}: ${t.title}</span>
+                        <span class="text-sm text-green-300 line-clamp-1">&gt; TASK_${i+1}: ${t.title}</span>
                     </label>
-                    <select class="score-select bg-hacker-gray border border-green-600/40 rounded-hacker px-2 py-1 text-xs text-green-400 font-bold focus:outline-none">
+                    <select class="score-select bg-hacker-gray border border-green-600/40 rounded-hacker px-2 py-1 text-xs text-green-400 font-bold">
                         <option value="100">100%</option>
                         <option value="90">90%</option>
                         <option value="80">80%</option>
@@ -603,7 +567,7 @@ HTML_CONTENT = """
 
         // Executar ✅ SEM ERRO
         document.getElementById('btn-run').addEventListener('click', async ()=>{
-            if(state.running) return notify('PROCESSO_JA_ATIVO','info');
+            if(state.running) return notify('PROCESSO_ATIVO','info');
             
             const selecionadas=[];
             document.querySelectorAll('#tasks-list > div').forEach(div=>{
@@ -624,10 +588,10 @@ HTML_CONTENT = """
 
             if(minT>maxT) return notify('TEMPO_INVALIDO','error');
 
-            if(!confirm(`INICIAR_PROCESSO: ${selecionadas.length} TAREFAS?`)) return;
+            if(!confirm(`INICIAR: ${selecionadas.length} TAREFAS?`)) return;
 
             state.running=true;
-            notify('INICIANDO_EXECUCAO...','info');
+            notify('INICIANDO...','info');
 
             for(let i=0;i<selecionadas.length;i++){
                 const atv=selecionadas[i];
@@ -662,7 +626,7 @@ HTML_CONTENT = """
             }
 
             state.running=false;
-            notify('PROCESSO_FINALIZADO','success');
+            notify('FINALIZADO','success');
         });
 
         document.getElementById('btn-close').onclick=()=>location.reload();
