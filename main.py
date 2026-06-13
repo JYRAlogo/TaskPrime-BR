@@ -12,8 +12,8 @@ from typing import Optional
 import os
 
 app = FastAPI(
-    title="TASK PRIME LEGION",
-    description="Automação Sala do Futuro | HACKER LEGION",
+    title="Task Prime Legion",
+    description="Automação Sala do Futuro | Hacker Legion",
     version="3.0.0-GOD"
 )
 
@@ -86,7 +86,7 @@ def solve_captcha(cookies={}):
     except:
         return ''
 
-# ─── LÓGICA DE BUSCA = IGUAL AO SEU CÓDIGO ANTIGO QUE FUNCIONAVA 100% ────────
+# ─── LÓGICA DE BUSCA CORRIGIDA ───────────────────────────────────────────────
 def do_login(ra, senha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     captcha = solve_captcha(cookies)
@@ -136,7 +136,7 @@ def do_login(ra, senha, cf=None):
         time.sleep(2)
     raise Exception('Falha ao trocar token após 5 tentativas')
 
-# ✅ FUNÇÃO DE BUSCA EXATA DO SEU CÓDIGO QUE DAVA CERTO
+# ✅ FUNÇÃO DE BUSCA CORRIGIDA
 def do_get_tasks(token, captcha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     
@@ -153,36 +153,43 @@ def do_get_tasks(token, captcha, cf=None):
                     cat_id = cat.get('id') or cat.get('code')
                     if cat_id and str(cat_id) not in targets:
                         targets.append(str(cat_id))
-    except:
+    except Exception as e:
         pass
 
+    # Se não encontrar salas, usa valores padrão que funcionam
     if not targets:
-        targets = ["all", "public", "0"]
+        targets = ["all", "public"]
 
     def fetch(expired):
         filter_exp = 'false' if expired else 'true'
         url = (f'{BASE}/p/https://edusp-api.ip.tv/tms/task/todo'
                f'?expired_only={str(expired).lower()}'
-               f'&limit=500&offset=0'
+               f'&limit=1000&offset=0'
                f'&filter_expired={filter_exp}'
                f'&is_exam=false&with_answer=true&is_essay=false'
                f'&answer_statuses=draft&answer_statuses=pending'
                f'&with_apply_moment=true&status=published&status=in_progress')
         
+        # Adiciona os alvos na URL
         for t in targets:
             url += f'&publication_target={t}'
 
         try:
             s2, d2 = req(url, headers=headers_auth(token, captcha), cookies=cookies)
             tasks_list = []
-            if isinstance(d2, list):
-                tasks_list = d2
-            elif isinstance(d2, dict):
-                if 'results' in d2: tasks_list = d2['results']
-                elif 'tasks' in d2: tasks_list = d2['tasks']
-                elif 'data' in d2: tasks_list = d2['data']
-                elif 'items' in d2: tasks_list = d2['items']
             
+            # Trata todos os formatos possíveis de resposta
+            if s2 == 200:
+                if isinstance(d2, list):
+                    tasks_list = d2
+                elif isinstance(d2, dict):
+                    if 'results' in d2: tasks_list = d2['results']
+                    elif 'tasks' in d2: tasks_list = d2['tasks']
+                    elif 'data' in d2: tasks_list = d2['data']
+                    elif 'items' in d2: tasks_list = d2['items']
+                    elif 'content' in d2: tasks_list = d2['content']
+            
+            # Remove duplicatas
             unique = []
             ids = set()
             for t in tasks_list:
@@ -191,7 +198,7 @@ def do_get_tasks(token, captcha, cf=None):
                     unique.append(t)
             return unique
 
-        except:
+        except Exception as e:
             return []
 
     def fmt(tasks, tipo):
@@ -301,7 +308,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND: ESTILO HACKER + BORDAS REDONDAS + TUDO PRETO ─────────────────
+# ─── FRONTEND: SEM UNDERLINES ─────────────────────────────────────────────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -312,7 +319,7 @@ HTML_CONTENT = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TaskPrime BR </> HACKER MODE</title>
+    <title>Task Prime BR | Hacker Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -364,27 +371,27 @@ HTML_CONTENT = """
             <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl p-6 md:p-8 glow-border">
                 <div class="text-center mb-8">
                     <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-black text-green-400 glow-green mb-2 tracking-wider">
-                        &lt;/&gt; TASK_PRIME
+                        &lt;/&gt; Task Prime
                     </h1>
-                    <p class="text-green-500/70 text-sm">// HACKER EDITION // GOD MODE</p>
+                    <p class="text-green-500/70 text-sm">// Hacker Edition // God Mode</p>
                 </div>
 
                 <form id="login-form" class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-green-300 mb-2">&gt; RA</label>
-                        <input type="text" id="ra" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="INPUT_RA">
+                        <input type="text" id="ra" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Insira RA">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; SENHA</label>
-                        <input type="password" id="senha" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="INPUT_PASS">
+                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; Senha</label>
+                        <input type="password" id="senha" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Insira senha">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; CF_TOKEN (OPCIONAL)</label>
-                        <input type="text" id="cf" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="BYPASS_CLOUDFLARE">
+                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; CF Token (Opcional)</label>
+                        <input type="text" id="cf" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Bypass Cloudflare">
                     </div>
 
                     <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-2 uppercase">
-                        &gt; EXECUTAR_LOGIN
+                        &gt; Executar Login
                     </button>
                 </form>
             </div>
@@ -396,7 +403,7 @@ HTML_CONTENT = """
                 
                 <!-- Cabeçalho -->
                 <div class="flex items-center justify-between p-5 border-b border-green-600/30 bg-green-900/10">
-                    <h2 class="text-lg font-black text-green-400 glow-green tracking-wider">&lt;/&gt; SELECIONAR_ALVO</h2>
+                    <h2 class="text-lg font-black text-green-400 glow-green tracking-wider">&lt;/&gt; Selecionar Alvo</h2>
                     <button id="btn-close" class="text-green-500 hover:text-green-300 text-2xl transition-all-smooth">
                         <i class="fa fa-times-circle"></i>
                     </button>
@@ -406,25 +413,25 @@ HTML_CONTENT = """
                 <div class="p-5 max-h-[65vh] overflow-y-auto scrollbar-hide">
                     <label class="flex items-center gap-3 mb-6 text-green-300 font-bold cursor-pointer">
                         <input type="checkbox" id="select-all" class="w-5 h-5 accent-green-500 rounded-sm">
-                        <span>&gt; SELECIONAR_TODOS</span>
+                        <span>&gt; Selecionar Todos</span>
                     </label>
 
                     <div id="tasks-list" class="space-y-3 mb-6">
-                        <div class="text-center text-green-700/70 py-6 font-bold">// CLICK: BUSCAR_ATIVIDADES</div>
+                        <div class="text-center text-green-700/70 py-6 font-bold">// Clique: Buscar Atividades</div>
                     </div>
 
                     <p class="text-xs text-green-600/60 mb-6 italic">
-                        * PONTUACAO: VALOR < 100 = MAIOR_CHANCE_ERRO
+                        * Pontuação: Valor < 100 = Maior Chance Erro
                     </p>
 
                     <!-- Tempo -->
                     <div class="grid grid-cols-2 gap-5 mb-2">
                         <div>
-                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; TEMPO_MIN (MIN)</label>
+                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; Tempo Min (Min)</label>
                             <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; TEMPO_MAX (MIN)</label>
+                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; Tempo Max (Min)</label>
                             <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
                         </div>
                     </div>
@@ -433,13 +440,13 @@ HTML_CONTENT = """
                 <!-- Botões -->
                 <div class="p-5 border-t border-green-600/30 bg-green-900/10 space-y-3">
                     <button id="btn-run" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border uppercase">
-                        &gt; EXECUTAR_SELECIONADAS
+                        &gt; Executar Selecionadas
                     </button>
                     <button id="btn-draft" class="w-full py-2.5 bg-hacker-gray border border-green-800/50 text-green-700/50 rounded-hacker cursor-not-allowed uppercase">
-                        // RASCUNHO
+                        // Rascunho
                     </button>
                     <button id="btn-refresh" class="w-full py-2.5 bg-hacker-light-gray hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-sm font-bold border border-green-700/30 uppercase">
-                        <i class="fa fa-refresh mr-2"></i> BUSCAR_ATIVIDADES
+                        <i class="fa fa-refresh mr-2"></i> Buscar Atividades
                     </button>
                 </div>
             </div>
@@ -472,7 +479,7 @@ HTML_CONTENT = """
         document.getElementById('login-form').addEventListener('submit', async e=>{
             e.preventDefault();
             const btn = e.target.querySelector('button');
-            btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> PROCESSANDO...';
+            btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> Processando...';
             try{
                 const res = await fetch('/api/login',{
                     method:'POST',
@@ -490,7 +497,7 @@ HTML_CONTENT = """
                 state.captcha=d.captcha;
                 state.cf=document.getElementById('cf').value.trim()||null;
 
-                notify(`ACESSO_PERMITIDO: ${d.nome.toUpperCase()}`,'success');
+                notify(`Acesso Permitido: ${d.nome.toUpperCase()}`, 'success');
                 
                 document.getElementById('login-screen').classList.add('opacity-0','scale-95');
                 setTimeout(()=>{
@@ -501,16 +508,16 @@ HTML_CONTENT = """
                 },300);
 
             }catch(err){
-                notify(`ERRO: ${err.message}`,'error');
+                notify(`Erro: ${err.message}`, 'error');
             }finally{
-                btn.disabled=false; btn.innerHTML='&gt; EXECUTAR_LOGIN';
+                btn.disabled=false; btn.innerHTML='&gt; Executar Login';
             }
         });
 
-        // ✅ BUSCA CORRIGIDA = MESMA LÓGICA DO SEU CÓDIGO QUE FUNCIONAVA
+        // ✅ BUSCA CORRIGIDA
         document.getElementById('btn-refresh').addEventListener('click', async ()=>{
             try{
-                notify('SOLICITANDO_DADOS...','info');
+                notify('Solicitando Dados...', 'info');
                 const res = await fetch('/api/tasks',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
@@ -524,20 +531,20 @@ HTML_CONTENT = """
                 renderTasks(state.tasks);
                 
                 if(state.tasks.length === 0){
-                    notify('NENHUMA_ATIVIDADE_ENCONTRADA','info');
+                    notify('Nenhuma Atividade Encontrada', 'info');
                 } else {
-                    notify(`SUCESSO: ${d.pending.length} ATIVAS | ${d.expired.length} CONCLUÍDAS`,'success');
+                    notify(`Sucesso: ${d.pending.length} Ativas | ${d.expired.length} Concluídas`, 'success');
                 }
 
             }catch(err){
-                notify(`FALHA: ${err.message}`,'error');
+                notify(`Falha: ${err.message}`, 'error');
             }
         });
 
         function renderTasks(list){
             const el = document.getElementById('tasks-list');
             el.innerHTML='';
-            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">// VAZIO //</div>';return;}
+            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">// Vazio //</div>';return;}
             
             list.forEach((t, i)=>{
                 const div=document.createElement('div');
@@ -547,7 +554,7 @@ HTML_CONTENT = """
                 div.innerHTML=`
                     <label class="flex items-center gap-3 flex-1 cursor-pointer">
                         <input type="checkbox" class="task-checkbox w-4 h-4 accent-green-500 rounded-sm">
-                        <span class="text-sm text-green-300 line-clamp-1">&gt; TASK_${i+1}: ${t.title}</span>
+                        <span class="text-sm text-green-300 line-clamp-1">&gt; Task ${i+1}: ${t.title}</span>
                     </label>
                     <select class="score-select bg-hacker-gray border border-green-600/40 rounded-hacker px-2 py-1 text-xs text-green-400 font-bold">
                         <option value="100">100%</option>
@@ -567,7 +574,7 @@ HTML_CONTENT = """
 
         // Executar ✅ SEM ERRO
         document.getElementById('btn-run').addEventListener('click', async ()=>{
-            if(state.running) return notify('PROCESSO_ATIVO','info');
+            if(state.running) return notify('Processo Ativo', 'info');
             
             const selecionadas=[];
             document.querySelectorAll('#tasks-list > div').forEach(div=>{
@@ -581,23 +588,23 @@ HTML_CONTENT = """
                 }
             });
 
-            if(!selecionadas.length) return notify('NENHUMA_TASK_SELECIONADA','error');
+            if(!selecionadas.length) return notify('Nenhuma Task Selecionada', 'error');
 
             const minT=parseInt(document.getElementById('min-time').value);
             const maxT=parseInt(document.getElementById('max-time').value);
 
-            if(minT>maxT) return notify('TEMPO_INVALIDO','error');
+            if(minT>maxT) return notify('Tempo Inválido', 'error');
 
-            if(!confirm(`INICIAR: ${selecionadas.length} TAREFAS?`)) return;
+            if(!confirm(`Iniciar: ${selecionadas.length} Tarefas?`)) return;
 
             state.running=true;
-            notify('INICIANDO...','info');
+            notify('Iniciando...', 'info');
 
             for(let i=0;i<selecionadas.length;i++){
                 const atv=selecionadas[i];
                 const tempo=Math.floor(Math.random()*(maxT-minT+1))+minT;
 
-                notify(`EXECUTANDO [${i+1}/${selecionadas.length}]`,'info');
+                notify(`Executando [${i+1}/${selecionadas.length}]`, 'info');
 
                 try{
                     const res=await fetch('/api/complete_task',{
@@ -616,17 +623,17 @@ HTML_CONTENT = """
                     const d=await res.json();
                     if(!res.ok) throw new Error(d.detail);
 
-                    notify(`✅ SUCESSO [${i+1}]`,'success');
+                    notify(`✅ Sucesso [${i+1}]`, 'success');
                     await new Promise(r=>setTimeout(r,800));
 
                 }catch(err){
-                    notify(`❌ FALHA [${i+1}]: ${err.message}`,'error');
+                    notify(`❌ Falha [${i+1}]: ${err.message}`, 'error');
                     await new Promise(r=>setTimeout(r,500));
                 }
             }
 
             state.running=false;
-            notify('FINALIZADO','success');
+            notify('Finalizado', 'success');
         });
 
         document.getElementById('btn-close').onclick=()=>location.reload();
