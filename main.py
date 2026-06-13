@@ -215,7 +215,6 @@ class LoginBody(BaseModel):
     ra: str
     senha: str
     cf: Optional[str] = None
-    turnstile_token: Optional[str] = None
 
 class TasksBody(BaseModel):
     token: str
@@ -232,30 +231,10 @@ class CompleteBody(BaseModel):
     draft: bool = False
 
 # ─── ROTAS API ───────────────────────────────────────────────────────────────
-TURNSTILE_SECRET = "0x4AAAAAADf8FX1DAuHNy6M-3rohj2wvMvw"
-def verify_turnstile(token):
-    if not token:
-        return False
-    try:
-        data = json.dumps({"secret": TURNSTILE_SECRET, "response": token}).encode()
-        r = urllib.request.Request(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with urllib.request.urlopen(r, context=ctx, timeout=10) as res:
-            result = json.loads(res.read())
-            return result.get("success", False)
-    except:
-        return False
-
 @app.post('/api/login')
 def api_login(body: LoginBody):
-    if not body.cf or len(body.cf.strip()) < 50:
-        raise HTTPException(status_code=401, detail='Cookie cf_clearance inválido ou vazio')
-    if not verify_turnstile(body.turnstile_token):
-        raise HTTPException(status_code=403, detail='Verificação Cloudflare falhou. Recarregue a página.')
+    if body.cf and len(body.cf.strip()) < 10:
+        body.cf = None
     try:
         return do_login(body.ra, body.senha, body.cf)
     except Exception as e:
@@ -276,7 +255,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND MODERNO ────────────────────────────────────────────────────────
+# ─── FRONTEND ────────────────────────────────────────────────────────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -290,7 +269,6 @@ HTML_CONTENT = """
     <title>TaskPrime BR | Automação Sala do Futuro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -301,7 +279,7 @@ HTML_CONTENT = """
                 extend: {
                     colors: {
                         dark: '#000000',
-                        'dark-light': '#0a0a0a',
+                        'dark-light': '#050505',
                         'neon-blue': '#00f0ff',
                         'neon-purple': '#b000ff',
                         'neon-green': '#00ff85',
@@ -346,22 +324,24 @@ HTML_CONTENT = """
                 border: 1px solid;
                 border-image: linear-gradient(135deg, #00f0ff, #b000ff) 1;
             }
+            .transition-all-smooth {
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .transform-smooth {
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            }
         }
     </style>
 </head>
-<body class="bg-dark text-gray-200 font-rajdhani min-h-screen flex flex-col">
-    <!-- Background Animation -->
-    <div class="fixed inset-0 z-0 overflow-hidden">
-        <div class="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-radial from-neon-blue/5 to-transparent opacity-30"></div>
-        <div class="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-radial from-neon-purple/5 to-transparent opacity-30"></div>
-        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-    </div>
+<body class="bg-dark text-gray-200 font-rajdhani min-h-screen flex flex-col overflow-x-hidden">
+    <!-- Background totalmente preto, sem efeitos extras -->
+    <div class="fixed inset-0 z-0 bg-dark"></div>
 
     <!-- Header -->
-    <header class="relative z-10 border-b border-dark-light/50 backdrop-blur-md bg-dark/70">
+    <header class="relative z-10 border-b border-gray-900/50 backdrop-blur-md bg-dark/80 transition-all-smooth hover:bg-dark/95">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-gradient-neon flex items-center justify-center shadow-neon">
+                <div class="w-10 h-10 rounded-lg bg-gradient-neon flex items-center justify-center shadow-neon transform-smooth hover:scale-105 hover:shadow-neon-hover">
                     <i class="fa fa-rocket text-dark text-lg"></i>
                 </div>
                 <h1 class="text-2xl font-bold tracking-wider">
@@ -378,8 +358,8 @@ HTML_CONTENT = """
     <!-- Main Content -->
     <main class="relative z-10 container mx-auto px-4 py-8 flex-grow">
         <!-- Login Section -->
-        <section id="login-section" class="max-w-md mx-auto transition-all duration-500">
-            <div class="bg-dark-light/80 backdrop-blur-lg rounded-2xl p-8 border border-gray-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+        <section id="login-section" class="max-w-md mx-auto transition-all-smooth opacity-100 scale-100">
+            <div class="bg-dark-light/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-900/50 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transform-smooth hover:border-neon-blue/20">
                 <div class="text-center mb-8">
                     <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-2 text-white">Acesso ao Sistema</h2>
                     <p class="text-gray-400">Automação completa para Sala do Futuro</p>
@@ -395,7 +375,7 @@ HTML_CONTENT = """
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fa fa-id-card text-gray-500"></i>
                             </div>
-                            <input type="text" id="ra" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all outline-none" placeholder="Digite seu RA">
+                            <input type="text" id="ra" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all-smooth outline-none hover:border-gray-700" placeholder="Digite seu RA">
                         </div>
                     </div>
 
@@ -405,75 +385,73 @@ HTML_CONTENT = """
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fa fa-lock text-gray-500"></i>
                             </div>
-                            <input type="password" id="senha" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all outline-none" placeholder="Digite sua senha">
+                            <input type="password" id="senha" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all-smooth outline-none hover:border-gray-700" placeholder="Digite sua senha">
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-300">Cookie cf_clearance</label>
+                        <label class="block text-sm font-medium text-gray-300">Cookie cf_clearance (opcional)</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fa fa-shield text-gray-500"></i>
                             </div>
-                            <input type="text" id="cf" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all outline-none" placeholder="Cole o valor do cookie aqui">
+                            <input type="text" id="cf" class="w-full pl-10 pr-4 py-3 bg-dark border border-gray-800 rounded-lg focus:ring-2 focus:ring-neon-blue/50 focus:border-neon-blue/50 transition-all-smooth outline-none hover:border-gray-700" placeholder="Cole aqui (não obrigatório)">
                         </div>
                     </div>
 
-                    <div class="cf-turnstile" data-sitekey="0x4AAAAAADf8FX1DAuHNy6M-3rohj2wvMvw" data-theme="dark" data-size="normal"></div>
-
-                    <button type="submit" class="w-full py-3.5 bg-gradient-neon rounded-lg text-dark font-semibold hover:shadow-neon-hover transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                    <button type="submit" class="w-full py-3.5 bg-gradient-neon rounded-lg text-dark font-semibold hover:shadow-neon-hover transition-all-smooth transform hover:-translate-y-0.5 active:translate-y-0 hover:scale-[1.02]">
                         <i class="fa fa-sign-in mr-2"></i> ENTRAR NO SISTEMA
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- Dashboard Section (Hidden initially) -->
-        <section id="dashboard-section" class="hidden transition-all duration-500">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="hidden transition-all-smooth opacity-0 scale-95">
             <div class="mb-8">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                     <div>
                         <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-white">Painel de Controle</h2>
                         <p class="text-gray-400" id="user-greeting"></p>
                     </div>
-                    <button id="logout-btn" class="px-4 py-2 bg-dark-light border border-gray-800 rounded-lg hover:bg-dark-light/70 transition-all text-gray-300">
+                    <button id="logout-btn" class="px-4 py-2 bg-dark-light border border-gray-800 rounded-lg hover:bg-dark-light/70 transition-all-smooth text-gray-300 hover:border-neon-red/30 hover:text-neon-red">
                         <i class="fa fa-sign-out mr-2"></i> Sair
                     </button>
                 </div>
 
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div class="bg-dark-light/80 backdrop-blur-lg rounded-xl p-5 border border-gray-800/50 hover:border-neon-green/30 transition-all">
+                    <div class="bg-dark-light/90 backdrop-blur-lg rounded-xl p-5 border border-gray-900/50 hover:border-neon-green/30 transition-all-smooth transform hover:scale-[1.03] hover:shadow-lg">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-gray-400 text-sm mb-1">Atividades Pendentes</p>
                                 <h3 id="stat-pending" class="text-4xl font-bold text-neon-green">0</h3>
                             </div>
-                            <div class="w-12 h-12 rounded-lg bg-neon-green/10 text-neon-green flex items-center justify-center text-xl">
+                            <div class="w-12 h-12 rounded-lg bg-neon-green/10 text-neon-green flex items-center justify-center text-xl transition-all-smooth hover:scale-110">
                                 <i class="fa fa-tasks"></i>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-dark-light/80 backdrop-blur-lg rounded-xl p-5 border border-gray-800/50 hover:border-neon-blue/30 transition-all">
+                    <div class="bg-dark-light/90 backdrop-blur-lg rounded-xl p-5 border border-gray-900/50 hover:border-neon-blue/30 transition-all-smooth transform hover:scale-[1.03] hover:shadow-lg">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-gray-400 text-sm mb-1">Atividades Concluídas</p>
                                 <h3 id="stat-done" class="text-4xl font-bold text-neon-blue">0</h3>
                             </div>
-                            <div class="w-12 h-12 rounded-lg bg-neon-blue/10 text-neon-blue flex items-center justify-center text-xl">
+                            <div class="w-12 h-12 rounded-lg bg-neon-blue/10 text-neon-blue flex items-center justify-center text-xl transition-all-smooth hover:scale-110">
                                 <i class="fa fa-check-circle"></i>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-dark-light/80 backdrop-blur-lg rounded-xl p-5 border border-gray-800/50 hover:border-neon-purple/30 transition-all">
+                    <div class="bg-dark-light/90 backdrop-blur-lg rounded-xl p-5 border border-gray-900/50 hover:border-neon-purple/30 transition-all-smooth transform hover:scale-[1.03] hover:shadow-lg">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-gray-400 text-sm mb-1">Total</p>
                                 <h3 id="stat-total" class="text-4xl font-bold text-neon-purple">0</h3>
                             </div>
-                            <div class="w-12 h-12 rounded-lg bg-neon-purple/10 text-neon-purple flex items-center justify-center text-xl">
+                            <div class="w-12 h-12 rounded-lg bg-neon-purple/10 text-neon-purple flex items-center justify-center text-xl transition-all-smooth hover:scale-110">
                                 <i class="fa fa-database"></i>
                             </div>
                         </div>
@@ -482,13 +460,13 @@ HTML_CONTENT = """
 
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-3 mb-8">
-                    <button id="btn-fetch" class="px-5 py-2.5 bg-gradient-neon rounded-lg text-dark font-medium hover:shadow-neon transition-all">
+                    <button id="btn-fetch" class="px-5 py-2.5 bg-gradient-neon rounded-lg text-dark font-medium hover:shadow-neon transition-all-smooth transform hover:scale-[1.05] active:scale-95">
                         <i class="fa fa-refresh mr-2"></i> BUSCAR ATIVIDADES
                     </button>
-                    <button id="btn-select-all" class="px-5 py-2.5 bg-dark-light border border-gray-800 rounded-lg hover:border-neon-blue/40 transition-all">
+                    <button id="btn-select-all" class="px-5 py-2.5 bg-dark-light border border-gray-800 rounded-lg hover:border-neon-blue/40 transition-all-smooth hover:bg-dark-light/60 transform hover:scale-[1.05] active:scale-95">
                         <i class="fa fa-check-square-o mr-2"></i> SELECIONAR TODAS
                     </button>
-                    <button id="btn-run-selected" class="px-5 py-2.5 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-lg hover:bg-neon-green/20 transition-all">
+                    <button id="btn-run-selected" class="px-5 py-2.5 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-lg hover:bg-neon-green/20 transition-all-smooth transform hover:scale-[1.05] active:scale-95">
                         <i class="fa fa-play mr-2"></i> EXECUTAR SELECIONADAS
                     </button>
                 </div>
@@ -496,30 +474,30 @@ HTML_CONTENT = """
                 <!-- Tasks Sections -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Pending Tasks -->
-                    <div id="task-section-pending" class="bg-dark-light/80 backdrop-blur-lg rounded-xl border border-gray-800/50 overflow-hidden">
-                        <div class="p-4 border-b border-gray-800/50 flex justify-between items-center">
+                    <div id="task-section-pending" class="bg-dark-light/90 backdrop-blur-lg rounded-xl border border-gray-900/50 overflow-hidden transition-all-smooth hover:shadow-lg">
+                        <div class="p-4 border-b border-gray-900/50 flex justify-between items-center">
                             <h3 class="font-semibold text-lg text-neon-green flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-neon-green inline-block"></span>
                                 Pendentes
                             </h3>
                             <span class="text-sm text-gray-400" id="count-pending">0</span>
                         </div>
-                        <ul id="list-pending" class="divide-y divide-gray-800/50 max-h-[500px] overflow-y-auto scrollbar-hide">
-                            <li class="p-4 text-center text-gray-500">Nenhuma atividade pendente</li>
+                        <ul id="list-pending" class="divide-y divide-gray-900/50 max-h-[500px] overflow-y-auto scrollbar-hide">
+                            <li class="p-4 text-center text-gray-500 transition-all-smooth">Nenhuma atividade pendente</li>
                         </ul>
                     </div>
 
                     <!-- Expired/Done Tasks -->
-                    <div id="task-section-expired" class="bg-dark-light/80 backdrop-blur-lg rounded-xl border border-gray-800/50 overflow-hidden">
-                        <div class="p-4 border-b border-gray-800/50 flex justify-between items-center">
+                    <div id="task-section-expired" class="bg-dark-light/90 backdrop-blur-lg rounded-xl border border-gray-900/50 overflow-hidden transition-all-smooth hover:shadow-lg">
+                        <div class="p-4 border-b border-gray-900/50 flex justify-between items-center">
                             <h3 class="font-semibold text-lg text-neon-blue flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-neon-blue inline-block"></span>
                                 Concluídas / Expiradas
                             </h3>
                             <span class="text-sm text-gray-400" id="count-expired">0</span>
                         </div>
-                        <ul id="list-expired" class="divide-y divide-gray-800/50 max-h-[500px] overflow-y-auto scrollbar-hide">
-                            <li class="p-4 text-center text-gray-500">Nenhuma atividade concluída</li>
+                        <ul id="list-expired" class="divide-y divide-gray-900/50 max-h-[500px] overflow-y-auto scrollbar-hide">
+                            <li class="p-4 text-center text-gray-500 transition-all-smooth">Nenhuma atividade concluída</li>
                         </ul>
                     </div>
                 </div>
@@ -528,14 +506,14 @@ HTML_CONTENT = """
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 border-t border-dark-light/50 backdrop-blur-md bg-dark/70 py-4 mt-12">
+    <footer class="relative z-10 border-t border-gray-900/50 backdrop-blur-md bg-dark/80 py-4 mt-12 transition-all-smooth">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
             <p>© 2026 <span class="text-neon-green">TaskPrime BR</span> • Desenvolvido com ❤️ por <span class="text-neon-blue font-semibold">!richardzs</span></p>
         </div>
     </footer>
 
     <!-- Notifications -->
-    <div id="notification-container" class="fixed top-5 right-5 z-50 space-y-3"></div>
+    <div id="notification-container" class="fixed top-5 right-5 z-50 space-y-3 transition-all-smooth"></div>
 
     <!-- Scripts -->
     <script>
@@ -560,12 +538,12 @@ HTML_CONTENT = """
             };
             
             const notif = document.createElement('div');
-            notif.className = `max-w-xs p-4 rounded-lg border backdrop-blur-md shadow-lg transition-all transform translate-x-0 opacity-0 ${colors[type]}`;
+            notif.className = `max-w-xs p-4 rounded-lg border backdrop-blur-md shadow-lg transition-all-smooth transform translate-x-0 opacity-0 ${colors[type]}`;
             notif.innerHTML = `
                 <div class="flex items-start gap-3">
                     <i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} text-lg"></i>
                     <div>${message}</div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400 hover:text-white">
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400 hover:text-white transition-all-smooth">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
@@ -575,8 +553,8 @@ HTML_CONTENT = """
             setTimeout(() => notif.classList.replace('opacity-0', 'opacity-100'), 10);
             setTimeout(() => {
                 notif.classList.add('opacity-0', 'translate-x-10');
-                setTimeout(() => notif.remove(), 300);
-            }, 5000);
+                setTimeout(() => notif.remove(), 400);
+            }, 4000);
         }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -592,8 +570,7 @@ HTML_CONTENT = """
                     body: JSON.stringify({
                         ra: document.getElementById('ra').value.trim(),
                         senha: document.getElementById('senha').value.trim(),
-                        cf: document.getElementById('cf').value.trim(),
-                        turnstile_token: turnstile.getResponse()
+                        cf: document.getElementById('cf').value.trim() || null
                     })
                 });
                 
@@ -605,17 +582,18 @@ HTML_CONTENT = """
                 state.captcha = data.captcha;
                 state.nome = data.nome;
                 state.escola = data.escola;
-                state.cf = document.getElementById('cf').value.trim();
+                state.cf = document.getElementById('cf').value.trim() || null;
                 
                 notify(`Bem-vindo, ${state.nome}!`, 'success');
                 
                 document.getElementById('login-section').classList.add('opacity-0', 'scale-95');
                 setTimeout(() => {
                     document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('dashboard-section').classList.remove('hidden', 'opacity-0', 'scale-95');
-                    document.getElementById('dashboard-section').classList.add('opacity-100', 'scale-100');
+                    const dash = document.getElementById('dashboard-section');
+                    dash.classList.remove('hidden', 'opacity-0', 'scale-95');
+                    dash.classList.add('opacity-100', 'scale-100');
                     document.getElementById('user-greeting').textContent = `${state.nome} • ${state.escola}`;
-                }, 500);
+                }, 400);
                 
             } catch(err) {
                 notify(err.message, 'error');
@@ -637,7 +615,7 @@ HTML_CONTENT = """
                 });
                 const d=await r.json();
                 if(!r.ok){
-                    notify('Erro tarefas: '+(d.detail||r.status),'err');
+                    notify('Erro tarefas: '+(d.detail||r.status),'error');
                     btnF.disabled=false;btnF.textContent='BUSCAR ATIVIDADES →';
                     return;
                 }
@@ -661,7 +639,7 @@ HTML_CONTENT = """
 
                 btnF.disabled=false;btnF.textContent='BUSCAR ATIVIDADES →';
             }catch(e){
-                notify('Erro: '+e.message,'err');
+                notify('Erro: '+e.message,'error');
                 const btnF=document.getElementById('btn-fetch');
                 btnF.disabled=false;btnF.textContent='BUSCAR ATIVIDADES →';
             }
@@ -671,28 +649,28 @@ HTML_CONTENT = """
             const ul=document.getElementById(listId);
             ul.innerHTML='';
             if(!tasks.length){
-                ul.innerHTML='<li class="p-6 text-center text-gray-500">// nenhuma atividade nesta categoria</li>';
+                ul.innerHTML='<li class="p-6 text-center text-gray-500 transition-all-smooth">// nenhuma atividade nesta categoria</li>';
                 return;
             }
             tasks.forEach(t=>{
                 const li=document.createElement('li');
-                li.className='p-4 hover:bg-dark/50 transition-all cursor-pointer group';
+                li.className='p-4 hover:bg-dark-light/70 transition-all-smooth cursor-pointer group border-b border-gray-900/30 last:border-0';
                 li.dataset.id=t.id;
                 li.innerHTML=`
                 <div class="flex items-start gap-3">
-                    <div class="w-5 h-5 mt-0.5 rounded border border-gray-700 flex items-center justify-center group-hover:border-neon-blue/50 transition-colors">
-                        <i class="fa fa-check text-neon-blue opacity-0 group-[.selected]:opacity-100 transition-opacity"></i>
+                    <div class="w-5 h-5 mt-0.5 rounded border border-gray-700 flex items-center justify-center group-hover:border-neon-blue/50 transition-all-smooth">
+                        <i class="fa fa-check text-neon-blue opacity-0 group-[.selected]:opacity-100 transition-all-smooth"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h4 class="font-medium text-gray-200 truncate">${t.title}</h4>
+                        <h4 class="font-medium text-gray-200 truncate group-hover:text-white transition-all-smooth">${t.title}</h4>
                         <p class="text-xs text-gray-500 mt-1">ID: ${t.id} • Vencimento: ${t.expire_at || 'Indefinido'}</p>
                     </div>
-                    <span class="text-xs px-2 py-0.5 rounded-full ${t.tipo==='pendente'?'bg-neon-green/10 text-neon-green':'bg-neon-blue/10 text-neon-blue'}">${t.tipo}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full transition-all-smooth ${t.tipo==='pendente'?'bg-neon-green/10 text-neon-green':'bg-neon-blue/10 text-neon-blue'}">${t.tipo}</span>
                 </div>`;
                 li.addEventListener('click',()=>{
                     const id=String(t.id);
-                    if(state.selected.has(id)){state.selected.delete(id);li.classList.remove('selected','bg-dark/70');}
-                    else{state.selected.add(id);li.classList.add('selected','bg-dark/70');}
+                    if(state.selected.has(id)){state.selected.delete(id);li.classList.remove('selected','bg-dark-light/80');}
+                    else{state.selected.add(id);li.classList.add('selected','bg-dark-light/80');}
                 });
                 ul.appendChild(li);
             });
@@ -702,7 +680,7 @@ HTML_CONTENT = """
             document.querySelectorAll('#list-pending li, #list-expired li').forEach(li=>{
                 if(li.dataset.id){
                     state.selected.add(String(li.dataset.id));
-                    li.classList.add('selected','bg-dark/70');
+                    li.classList.add('selected','bg-dark-light/80');
                 }
             });
             notify(`${state.selected.size} atividades selecionadas`, 'info');
@@ -743,7 +721,7 @@ HTML_CONTENT = """
                     if(!r.ok) throw new Error(d.detail||'Falha');
                     
                     notify(`✅ Concluído: ${t.title}`, 'success');
-                    await new Promise(r=>setTimeout(r,1500));
+                    await new Promise(r=>setTimeout(r,1200));
                 }catch(e){
                     notify(`❌ Erro ${t.title}: ${e.message}`, 'error');
                 }
