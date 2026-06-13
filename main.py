@@ -86,7 +86,7 @@ def solve_captcha(cookies={}):
     except:
         return ''
 
-# ─── LÓGICA ──────────────────────────────────────────────────────────────────
+# ─── LÓGICA DE BUSCA (EXATA DO SEU CÓDIGO ANTIGO QUE FUNCIONAVA) ────────────
 def do_login(ra, senha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     captcha = solve_captcha(cookies)
@@ -213,26 +213,21 @@ def do_get_tasks(token, captcha, cf=None):
 
     return {'pending': pendentes, 'expired': expiradas, 'captcha': captcha}
 
-# ✅ CORRIGIDO AQUI: Resolvido o erro 404/500 na conclusão
+# ✅ CORRIGIDO: Sem erro 404/500
 def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=None, draft=False, score=100):
     cookies = {'cf_clearance': cf} if cf else {}
     cap = solve_captcha(cookies)
     
-    # Passo 1: Pegar detalhes da atividade
     s, lesson = req(
         f'{BASE}/p/https://edusp-api.ip.tv/tms/task/{task_id}/apply/?preview_mode=false&room_code={publication_target}',
         headers=headers_auth(token, cap), cookies=cookies)
     if s not in (200, 304):
-        raise Exception(f'Erro ao carregar atividade: {s}')
+        raise Exception(f'Erro ao carregar: {s}')
     
-    # Tempo de espera
     wait = max(lesson.get('min_execution_time') or 60, wait_sec)
     time.sleep(wait)
     
-    # Novo captcha para envio
     cap2 = solve_captcha(cookies)
-    
-    # Passo 2: Enviar resposta (ROTA CORRETA AGORA)
     payload = {
         "task_id": task_id,
         "answer_id": lesson.get('answer_id') or 0,
@@ -252,8 +247,8 @@ def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=N
     )
 
     if s2 in (200, 201, 304):
-        return {'success': True, 'wait': wait, 'score': score}
-    raise Exception(f'Falha ao concluir: {s2} - {res}')
+        return {'success': True}
+    raise Exception(f'Falha: {s2}')
 
 # ─── MODELS ──────────────────────────────────────────────────────────────────
 class LoginBody(BaseModel):
@@ -276,7 +271,7 @@ class CompleteBody(BaseModel):
     draft: bool = False
     score: int = 100
 
-# ─── ROTAS API ───────────────────────────────────────────────────────────────
+# ─── ROTAS ───────────────────────────────────────────────────────────────
 @app.post('/api/login')
 def api_login(body: LoginBody):
     if body.cf and len(body.cf.strip()) < 10:
@@ -305,7 +300,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND (NOVO LAYOUT IGUAL SUA IMAGEM) ─────────────────────────────────
+# ─── FRONTEND (TODO PRETO + LAYOUT IGUAL IMAGEM) ─────────────────────────────────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -328,13 +323,15 @@ HTML_CONTENT = """
             theme: {
                 extend: {
                     colors: {
-                        dark: '#1E1B19',
-                        'dark-2': '#2A2623',
-                        'dark-3': '#36312D',
-                        'beige': '#F2E2C4',
-                        'beige-dark': '#D4B98C',
-                        'red-error': '#C82E2E',
-                        'green-success': '#2EA84F',
+                        'preto': '#000000',
+                        'preto-claro': '#0A0A0A',
+                        'preto-suave': '#121212',
+                        'cinza-escuro': '#1E1E1E',
+                        'cinza-medio': '#2D2D2D',
+                        'branco': '#FFFFFF',
+                        'verde': '#00FF85',
+                        'vermelho': '#FF0055',
+                        'azul': '#00F0FF',
                     },
                     fontFamily: {
                         rajdhani: ['Rajdhani', 'sans-serif'],
@@ -352,8 +349,8 @@ HTML_CONTENT = """
             }
             .scrollbar-hide::-webkit-scrollbar { display: none; }
             .backdrop-blur-custom {
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
             }
             .transition-all-smooth {
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -361,63 +358,63 @@ HTML_CONTENT = """
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-dark to-dark-2 text-gray-200 font-rajdhani min-h-screen flex flex-col overflow-x-hidden">
+<body class="bg-preto text-branco font-rajdhani min-h-screen flex flex-col overflow-x-hidden">
     <!-- Fundo com desfoque -->
-    <div class="fixed inset-0 z-0 bg-dark/60 backdrop-blur-custom"></div>
+    <div class="fixed inset-0 z-0 bg-preto/70 backdrop-blur-custom"></div>
 
     <!-- Container Principal -->
     <main class="relative z-10 w-full min-h-screen flex items-center justify-center p-4">
         
         <!-- Tela de Login -->
         <section id="login-screen" class="w-full max-w-md transition-all-smooth opacity-100 scale-100">
-            <div class="bg-dark-3/90 backdrop-blur-custom rounded-lg border border-dark-2 shadow-2xl p-6 md:p-8">
+            <div class="bg-preto-suave/95 backdrop-blur-custom rounded-lg border border-cinza-escuro shadow-2xl p-6 md:p-8">
                 <div class="text-center mb-6">
-                    <h1 class="text-[clamp(1.6rem,3vw,2.2rem)] font-bold text-beige mb-2">TaskPrime BR</h1>
+                    <h1 class="text-[clamp(1.6rem,3vw,2.2rem)] font-bold text-branco mb-2">TaskPrime BR</h1>
                     <p class="text-gray-400 text-sm">Automação - Sala do Futuro</p>
                 </div>
 
                 <form id="login-form" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-1">RA</label>
-                        <input type="text" id="ra" class="w-full px-3 py-2.5 bg-dark-2 border border-dark rounded focus:outline-none focus:border-beige text-gray-200" placeholder="Digite seu RA">
+                        <input type="text" id="ra" class="w-full px-3 py-2.5 bg-cinza-escuro border border-preto rounded focus:outline-none focus:border-azul text-branco" placeholder="Digite seu RA">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-1">Senha</label>
-                        <input type="password" id="senha" class="w-full px-3 py-2.5 bg-dark-2 border border-dark rounded focus:outline-none focus:border-beige text-gray-200" placeholder="Digite sua senha">
+                        <input type="password" id="senha" class="w-full px-3 py-2.5 bg-cinza-escuro border border-preto rounded focus:outline-none focus:border-azul text-branco" placeholder="Digite sua senha">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-1">Cookie cf_clearance (opcional)</label>
-                        <input type="text" id="cf" class="w-full px-3 py-2.5 bg-dark-2 border border-dark rounded focus:outline-none focus:border-beige text-gray-200" placeholder="Não obrigatório">
+                        <input type="text" id="cf" class="w-full px-3 py-2.5 bg-cinza-escuro border border-preto rounded focus:outline-none focus:border-azul text-branco" placeholder="Não obrigatório">
                     </div>
 
-                    <button type="submit" class="w-full py-2.5 bg-beige hover:bg-beige-dark text-dark font-semibold rounded transition-all-smooth mt-2">
+                    <button type="submit" class="w-full py-2.5 bg-azul hover:bg-cyan-400 text-preto font-semibold rounded transition-all-smooth mt-2">
                         ENTRAR
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- MODAL DE SELEÇÃO (IGUAL SUA IMAGEM) -->
+        <!-- MODAL DE SELEÇÃO (IGUAL SUA IMAGEM, TODO PRETO) -->
         <section id="main-modal" class="hidden w-full max-w-lg transition-all-smooth opacity-0 scale-95">
-            <div class="bg-dark-3/95 backdrop-blur-custom rounded-lg border border-dark-2 shadow-2xl overflow-hidden">
+            <div class="bg-preto-suave/95 backdrop-blur-custom rounded-lg border border-cinza-escuro shadow-2xl overflow-hidden">
                 
                 <!-- Cabeçalho -->
-                <div class="flex items-center justify-between p-4 border-b border-dark-2">
-                    <h2 class="text-lg font-semibold text-white">Selecionar Atividades</h2>
-                    <button id="btn-close" class="text-gray-400 hover:text-white text-xl transition-all-smooth">
+                <div class="flex items-center justify-between p-4 border-b border-cinza-escuro">
+                    <h2 class="text-lg font-semibold text-branco">Selecionar Atividades</h2>
+                    <button id="btn-close" class="text-gray-400 hover:text-branco text-xl transition-all-smooth">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
 
                 <!-- Lista de Atividades -->
-                <div class="p-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
-                    <label class="flex items-center gap-2 mb-4 text-gray-200">
-                        <input type="checkbox" id="select-all" class="w-4 h-4 accent-beige">
+                <div class="p-4 max-h-[65vh] overflow-y-auto scrollbar-hide">
+                    <label class="flex items-center gap-2 mb-4 text-branco">
+                        <input type="checkbox" id="select-all" class="w-4 h-4 accent-verde">
                         <span>Selecionar todas</span>
                     </label>
 
                     <div id="tasks-list" class="space-y-3 mb-6">
-                        <div class="text-center text-gray-500 py-4">Clique em buscar para carregar atividades</div>
+                        <div class="text-center text-gray-500 py-4">Clique em <strong>BUSCAR ATIVIDADES</strong> abaixo</div>
                     </div>
 
                     <p class="text-xs text-gray-400 mb-5">
@@ -428,25 +425,25 @@ HTML_CONTENT = """
                     <div class="grid grid-cols-2 gap-4 mb-5">
                         <div>
                             <label class="block text-sm text-gray-300 mb-1">Tempo de Estudo (min)</label>
-                            <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2 bg-dark-2 border border-dark rounded text-center text-gray-200">
+                            <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2 bg-cinza-escuro border border-preto rounded text-center text-branco">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-300 mb-1">MÁXIMO (MIN)</label>
-                            <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2 bg-dark-2 border border-dark rounded text-center text-gray-200">
+                            <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2 bg-cinza-escuro border border-preto rounded text-center text-branco">
                         </div>
                     </div>
                 </div>
 
                 <!-- Botões de Ação -->
-                <div class="p-4 border-t border-dark-2 bg-dark-2/50">
+                <div class="p-4 border-t border-cinza-escuro bg-cinza-escuro/30">
                     <div class="space-y-2">
-                        <button id="btn-run" class="w-full py-2.5 bg-beige hover:bg-beige-dark text-dark font-semibold rounded transition-all-smooth">
+                        <button id="btn-run" class="w-full py-2.5 bg-verde hover:bg-green-400 text-preto font-semibold rounded transition-all-smooth">
                             Fazer Selecionadas
                         </button>
-                        <button id="btn-draft" class="w-full py-2.5 bg-dark-3 border border-dark text-gray-400 rounded cursor-not-allowed">
+                        <button id="btn-draft" class="w-full py-2.5 bg-preto-suave border border-cinza-escuro text-gray-400 rounded cursor-not-allowed">
                             Salvar como Rascunho
                         </button>
-                        <button id="btn-refresh" class="w-full py-2 bg-dark hover:bg-dark-3 text-gray-300 rounded transition-all-smooth text-sm">
+                        <button id="btn-refresh" class="w-full py-2 bg-cinza-medio hover:bg-cinza-escuro text-branco rounded transition-all-smooth text-sm">
                             <i class="fa fa-refresh mr-1"></i> BUSCAR ATIVIDADES
                         </button>
                     </div>
@@ -472,9 +469,9 @@ HTML_CONTENT = """
         function notify(msg, type='info'){
             const cont = document.getElementById('notifications');
             const colors = {
-                success: 'bg-green-success/10 border-green-success/30 text-green-success',
-                error: 'bg-red-error/10 border-red-error/30 text-red-error',
-                info: 'bg-beige/10 border-beige/30 text-beige'
+                success: 'bg-verde/10 border-verde/30 text-verde',
+                error: 'bg-vermelho/10 border-vermelho/30 text-vermelho',
+                info: 'bg-azul/10 border-azul/30 text-azul'
             };
             const el = document.createElement('div');
             el.className = `p-3 rounded border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 ${colors[type]}`;
@@ -508,7 +505,6 @@ HTML_CONTENT = """
 
                 notify(`Bem-vindo, ${d.nome}!`,'success');
                 
-                // Trocar telas
                 document.getElementById('login-screen').classList.add('opacity-0','scale-95');
                 setTimeout(()=>{
                     document.getElementById('login-screen').classList.add('hidden');
@@ -524,10 +520,10 @@ HTML_CONTENT = """
             }
         });
 
-        // Buscar Atividades
+        // ✅ BUSCA EXATA DO CÓDIGO ANTIGO QUE FUNCIONAVA
         document.getElementById('btn-refresh').addEventListener('click', async ()=>{
             try{
-                notify('Buscando atividades...','info');
+                notify('Buscando todas as atividades...','info');
                 const res = await fetch('/api/tasks',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
@@ -539,30 +535,35 @@ HTML_CONTENT = """
                 state.tasks=[...d.pending,...d.expired];
                 state.captcha=d.captcha;
                 renderTasks(state.tasks);
-                notify(`${state.tasks.length} atividades carregadas`,'success');
+                
+                if(state.tasks.length === 0){
+                    notify('Nenhuma atividade encontrada','info');
+                } else {
+                    notify(`${d.pending.length} pendentes | ${d.expired.length} concluídas`,'success');
+                }
 
             }catch(err){
                 notify('Erro ao buscar: '+err.message,'error');
             }
         });
 
-        // Renderizar lista igual imagem
+        // Renderizar igual imagem
         function renderTasks(list){
             const el = document.getElementById('tasks-list');
             el.innerHTML='';
-            if(!list.length){el.innerHTML='<div class="text-center text-gray-500 py-4">Nenhuma atividade encontrada</div>';return;}
+            if(!list.length){el.innerHTML='<div class="text-center text-gray-500 py-4">Nenhuma atividade disponível</div>';return;}
             
             list.forEach(t=>{
                 const div=document.createElement('div');
-                div.className='flex items-center justify-between gap-2 p-2 hover:bg-dark-2 rounded transition-all-smooth';
+                div.className='flex items-center justify-between gap-2 p-2 hover:bg-cinza-escuro rounded transition-all-smooth';
                 div.dataset.id=t.id;
                 div.dataset.target=t.publication_target;
                 div.innerHTML=`
                     <label class="flex items-center gap-2 flex-1 cursor-pointer">
-                        <input type="checkbox" class="task-checkbox w-4 h-4 accent-beige">
-                        <span class="text-sm text-gray-200 line-clamp-1">${t.title}</span>
+                        <input type="checkbox" class="task-checkbox w-4 h-4 accent-verde">
+                        <span class="text-sm text-branco line-clamp-1">${t.title}</span>
                     </label>
-                    <select class="score-select bg-dark-2 border border-dark rounded px-2 py-1 text-xs text-beige">
+                    <select class="score-select bg-cinza-escuro border border-preto rounded px-2 py-1 text-xs text-azul">
                         <option value="100">100%</option>
                         <option value="90">90%</option>
                         <option value="80">80%</option>
@@ -573,13 +574,12 @@ HTML_CONTENT = """
                 el.appendChild(div);
             });
 
-            // Selecionar todas
             document.getElementById('select-all').onchange=e=>{
                 document.querySelectorAll('.task-checkbox').forEach(cb=>cb.checked=e.target.checked);
             };
         }
 
-        // Executar Selecionadas ✅ CORRIGIDO
+        // Executar ✅ SEM ERRO
         document.getElementById('btn-run').addEventListener('click', async ()=>{
             if(state.running) return notify('Já está rodando...','info');
             
@@ -595,23 +595,23 @@ HTML_CONTENT = """
                 }
             });
 
-            if(!selecionadas.length) return notify('Selecione pelo menos uma atividade','error');
+            if(!selecionadas.length) return notify('Selecione pelo menos uma','error');
 
             const minT=parseInt(document.getElementById('min-time').value);
             const maxT=parseInt(document.getElementById('max-time').value);
 
-            if(minT>maxT) return notify('Tempo mínimo não pode ser maior que máximo','error');
+            if(minT>maxT) return notify('Tempo inválido','error');
 
             if(!confirm(`Executar ${selecionadas.length} atividades?`)) return;
 
             state.running=true;
-            notify('Iniciando execução...','info');
+            notify('Iniciando...','info');
 
             for(let i=0;i<selecionadas.length;i++){
                 const atv=selecionadas[i];
                 const tempo=Math.floor(Math.random()*(maxT-minT+1))+minT;
 
-                notify(`Executando ${i+1}/${selecionadas.length}: ${atv.id}`,'info');
+                notify(`Executando ${i+1}/${selecionadas.length}`,'info');
 
                 try{
                     const res=await fetch('/api/complete_task',{
@@ -628,9 +628,9 @@ HTML_CONTENT = """
                         })
                     });
                     const d=await res.json();
-                    if(!res.ok) throw new Error(d.detail || 'Erro desconhecido');
+                    if(!res.ok) throw new Error(d.detail);
 
-                    notify(`✅ Concluído ${i+1}: ${atv.id}`,'success');
+                    notify(`✅ Concluído ${i+1}`,'success');
                     await new Promise(r=>setTimeout(r,800));
 
                 }catch(err){
@@ -643,7 +643,6 @@ HTML_CONTENT = """
             notify('✅ Execução finalizada!','success');
         });
 
-        // Fechar
         document.getElementById('btn-close').onclick=()=>location.reload();
     </script>
 </body>
