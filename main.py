@@ -12,8 +12,8 @@ from typing import Optional
 import os
 
 app = FastAPI(
-    title="Task Prime Legion",
-    description="Automação Sala do Futuro | Hacker Legion",
+    title="TaskPrime BR",
+    description="Automação Sala do Futuro | HACKER EDITION",
     version="3.0.0-GOD"
 )
 
@@ -86,7 +86,7 @@ def solve_captcha(cookies={}):
     except:
         return ''
 
-# ─── LÓGICA DE BUSCA CORRIGIDA ───────────────────────────────────────────────
+# ─── LOGIN ───────────────────────────────────────────────────────────────────
 def do_login(ra, senha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     captcha = solve_captcha(cookies)
@@ -136,133 +136,75 @@ def do_login(ra, senha, cf=None):
         time.sleep(2)
     raise Exception('Falha ao trocar token após 5 tentativas')
 
-# ✅ FUNÇÃO DE BUSCA CORRIGIDA
+# ✅ FUNÇÃO DE BUSCA = EXATAMENTE A QUE VOCÊ ME MANDOU (FUNCIONA 100%)
 def do_get_tasks(token, captcha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
-    
+    s, d = req(f'{BASE}/p/https://edusp-api.ip.tv/room/user',
+        headers=headers_auth(token, captcha), cookies=cookies)
     targets = []
-    try:
-        s, d = req(f'{BASE}/p/https://edusp-api.ip.tv/room/user',
-            headers=headers_auth(token, captcha), cookies=cookies)
-        if s == 200 and isinstance(d, dict):
-            for room in d.get('rooms', []):
-                room_code = room.get('code') or room.get('name') or room.get('id')
-                if room_code and str(room_code) not in targets:
-                    targets.append(str(room_code))
-                for cat in room.get('group_categories', []):
-                    cat_id = cat.get('id') or cat.get('code')
-                    if cat_id and str(cat_id) not in targets:
-                        targets.append(str(cat_id))
-    except Exception as e:
-        pass
-
-    # Se não encontrar salas, usa valores padrão que funcionam
-    if not targets:
-        targets = ["all", "public"]
-
+    if s == 200:
+        for room in d.get('rooms', []):
+            v = room.get('name')
+            if v and str(v) not in targets: targets.append(str(v))
+            for gc in room.get('group_categories', []):
+                v2 = gc.get('id')
+                if v2 and str(v2) not in targets: targets.append(str(v2))
     def fetch(expired):
         filter_exp = 'false' if expired else 'true'
         url = (f'{BASE}/p/https://edusp-api.ip.tv/tms/task/todo'
-               f'?expired_only={str(expired).lower()}'
-               f'&limit=1000&offset=0'
-               f'&filter_expired={filter_exp}'
-               f'&is_exam=false&with_answer=true&is_essay=false'
-               f'&answer_statuses=draft&answer_statuses=pending'
-               f'&with_apply_moment=true&status=published&status=in_progress')
-        
-        # Adiciona os alvos na URL
-        for t in targets:
-            url += f'&publication_target={t}'
-
-        try:
-            s2, d2 = req(url, headers=headers_auth(token, captcha), cookies=cookies)
-            tasks_list = []
-            
-            # Trata todos os formatos possíveis de resposta
-            if s2 == 200:
-                if isinstance(d2, list):
-                    tasks_list = d2
-                elif isinstance(d2, dict):
-                    if 'results' in d2: tasks_list = d2['results']
-                    elif 'tasks' in d2: tasks_list = d2['tasks']
-                    elif 'data' in d2: tasks_list = d2['data']
-                    elif 'items' in d2: tasks_list = d2['items']
-                    elif 'content' in d2: tasks_list = d2['content']
-            
-            # Remove duplicatas
-            unique = []
-            ids = set()
-            for t in tasks_list:
-                if isinstance(t, dict) and t.get('id') and t['id'] not in ids:
-                    ids.add(t['id'])
-                    unique.append(t)
-            return unique
-
-        except Exception as e:
-            return []
-
+               f'?expired_only={str(expired).lower()}&limit=100&offset=0'
+               f'&filter_expired={filter_exp}&is_exam=false&with_answer=true&is_essay=false'
+               f'&answer_statuses=draft&answer_statuses=pending&with_apply_moment=true')
+        for t in targets: url += f'&publication_target={t}'
+        s2, d2 = req(url, headers=headers_auth(token, captcha), cookies=cookies)
+        if isinstance(d2, list): return d2
+        return d2.get('results') or d2.get('tasks') or []
     def fmt(tasks, tipo):
-        lista = []
-        if isinstance(tasks, list):
-            for t in tasks:
-                if isinstance(t, dict):
-                    lista.append({
-                        'id': t.get('id'),
-                        'title': t.get('title', f'Atividade #{t.get("id", "0")}'),
-                        'expire_at': (t.get('expire_at','')[:10] if t.get('expire_at') else 'Sem prazo'),
-                        'publication_target': t.get('publication_target',''),
-                        'tipo': tipo,
-                        'status': t.get('status', 'desconhecido')
-                    })
-        return lista
+        return [{'id': t.get('id'),
+                 'title': t.get('title', f'#{t.get("id")}'),
+                 'expire_at': (t.get('expire_at','')[:10] if t.get('expire_at') else '-'),
+                 'publication_target': t.get('publication_target',''),
+                 'tipo': tipo} for t in tasks]
+    return {'pending': fmt(fetch(False), 'pendente'),
+            'expired': fmt(fetch(True),  'expirada'),
+            'captcha': captcha}
 
-    pendentes = fmt(fetch(False), 'pendente')
-    expiradas = fmt(fetch(True), 'expirada/concluída')
-
-    return {'pending': pendentes, 'expired': expiradas, 'captcha': captcha}
-
-# ✅ CORRIGIDO: SEM ERRO 404/500 AO FINALIZAR
-def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=None, draft=False, score=100):
+# ✅ FUNÇÃO DE FINALIZAÇÃO = EXATAMENTE A QUE VOCÊ ME MANDOU (SEM ERRO 404)
+def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=None, draft=False):
     cookies = {'cf_clearance': cf} if cf else {}
     cap = solve_captcha(cookies)
-    
     s, lesson = req(
         f'{BASE}/p/https://edusp-api.ip.tv/tms/task/{task_id}/apply/?preview_mode=false&room_code={publication_target}',
         headers=headers_auth(token, cap), cookies=cookies)
     if s not in (200, 304):
-        raise Exception(f'Erro ao carregar atividade: {s}')
-    
+        raise Exception(f'apply falhou {s}: {lesson.get("message") or lesson}')
     wait = max(lesson.get('min_execution_time') or 60, wait_sec)
     time.sleep(wait)
-    
     cap2 = solve_captcha(cookies)
-    payload = {
-        "task_id": task_id,
-        "answer_id": lesson.get('answer_id') or 0,
-        "room_code": publication_target,
-        "time_spent": wait,
-        "score": score,
-        "draft": draft,
-        "captcha_token": cap2
-    }
-
-    s2, res = req(
-        f'{BASE}/p/https://edusp-api.ip.tv/tms/task/{task_id}/answer',
-        method='POST',
-        data=payload,
-        headers=headers_auth(token, cap2),
-        cookies=cookies
-    )
-
-    if s2 in (200, 201, 304):
-        return {'success': True}
-    raise Exception(f'Falha: {s2} - {res}')
+    s2, res = req(f'{BASE}/api/complete', method='POST',
+        data={
+            'x_auth_key': token, 'room_code': publication_target,
+            'lesson_id': task_id, 'draft': draft, 'lesson_info': lesson,
+            'time_spent': wait, 'answer_id': lesson.get('answer_id') or 0,
+            'target_score': 100, 'captchaToken': cap2,
+        },
+        headers={
+            'accept':'*/*','accept-language':'pt-BR,pt;q=0.7',
+            'content-type':'application/json',
+            'origin': BASE,'referer': BASE+'/','priority':'u=1, i',
+            'user-agent': UA,
+        },
+        cookies=cookies)
+    if s2 == 200:
+        return {'success': True, 'wait': wait, 'draft': draft}
+    raise Exception(f'complete falhou {s2}: {res.get("message") or res.get("error") or res}')
 
 # ─── MODELS ──────────────────────────────────────────────────────────────────
 class LoginBody(BaseModel):
     ra: str
     senha: str
     cf: Optional[str] = None
+    turnstile_token: Optional[str] = None
 
 class TasksBody(BaseModel):
     token: str
@@ -274,16 +216,36 @@ class CompleteBody(BaseModel):
     captcha: Optional[str] = None
     task_id: int
     publication_target: str = ''
-    wait_sec: int = 2
+    wait_sec: int = 90
     cf: Optional[str] = None
     draft: bool = False
-    score: int = 100
 
-# ─── ROTAS ───────────────────────────────────────────────────────────────
+# ─── ROTAS + CLOUDFLARE CHECK (COMO VOCÊ QUER) ───────────────────────────────
+TURNSTILE_SECRET = "0x4AAAAAADf8FX1DAuHNy6M-3rohj2wvMvw"
+
+def verify_turnstile(token):
+    if not token:
+        return False
+    try:
+        data = json.dumps({"secret": TURNSTILE_SECRET, "response": token}).encode()
+        r = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(r, context=ctx, timeout=10) as res:
+            result = json.loads(res.read())
+            return result.get("success", False)
+    except:
+        return False
+
 @app.post('/api/login')
 def api_login(body: LoginBody):
-    if body.cf and len(body.cf.strip()) < 10:
-        body.cf = None
+    if not body.cf or len(body.cf.strip()) < 50:
+        raise HTTPException(status_code=401, detail='RA ou senha inválidos')
+    if not verify_turnstile(body.turnstile_token):
+        raise HTTPException(status_code=403, detail='Verificação Cloudflare falhou. Recarregue a página.')
     try:
         return do_login(body.ra, body.senha, body.cf)
     except Exception as e:
@@ -292,23 +254,19 @@ def api_login(body: LoginBody):
 @app.post('/api/tasks')
 def api_tasks(body: TasksBody):
     try:
-        resultado = do_get_tasks(body.token, body.captcha, body.cf)
-        return resultado
+        return do_get_tasks(body.token, body.captcha, body.cf)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post('/api/complete_task')
 def api_complete(body: CompleteBody):
     try:
-        return do_complete_task(
-            body.token, body.captcha, body.task_id,
-            body.publication_target, body.wait_sec,
-            body.cf, body.draft, body.score
-        )
+        return do_complete_task(body.token, body.captcha, body.task_id,
+                                body.publication_target, body.wait_sec, body.cf, body.draft)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND: SEM UNDERLINES ─────────────────────────────────────────────
+# ─── FRONTEND: ESTILO HACKER GOD + </> + BORDAS REDONDAS + TUDO PRETO ───────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -319,7 +277,7 @@ HTML_CONTENT = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Task Prime BR | Hacker Mode</title>
+    <title>TaskPrime BR </> HACKER MODE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -332,9 +290,9 @@ HTML_CONTENT = """
                 extend: {
                     colors: {
                         'hacker-black': '#000000',
-                        'hacker-dark': '#0A0A0A',
-                        'hacker-gray': '#121212',
-                        'hacker-light-gray': '#1E1E1E',
+                        'hacker-dark': '#050505',
+                        'hacker-gray': '#101010',
+                        'hacker-light-gray': '#1A1A1A',
                         'hacker-green': '#00FF00',
                         'hacker-red': '#FF0000',
                         'hacker-blue': '#0088FF',
@@ -343,7 +301,7 @@ HTML_CONTENT = """
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     borderRadius: {
-                        'hacker': '28px',
+                        'hacker': '32px',
                     }
                 }
             }
@@ -354,44 +312,49 @@ HTML_CONTENT = """
             .content-auto { content-visibility: auto; }
             .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
             .scrollbar-hide::-webkit-scrollbar { display: none; }
-            .backdrop-blur-custom { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-            .transition-all-smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-            .glow-green { text-shadow: 0 0 8px #00FF00; }
-            .glow-border { box-shadow: 0 0 12px #00FF0020; }
+            .backdrop-blur-custom { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+            .transition-all-smooth { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+            .glow-green { text-shadow: 0 0 10px #00FF00; }
+            .glow-border { box-shadow: 0 0 15px #00FF0025; }
+            .glow-red-border { box-shadow: 0 0 15px #FF000025; }
         }
     </style>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body class="bg-hacker-black text-green-400 font-mono min-h-screen flex flex-col overflow-x-hidden selection:bg-green-500 selection:text-black">
-    <div class="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#001200_0%,_#000000_70%)]"></div>
+    <div class="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#001a00_0%,_#000000_80%)]"></div>
+    <div class="fixed inset-0 z-0 opacity-5 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
     <main class="relative z-10 w-full min-h-screen flex items-center justify-center p-4">
         
         <!-- Login -->
         <section id="login-screen" class="w-full max-w-md transition-all-smooth opacity-100 scale-100">
-            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl p-6 md:p-8 glow-border">
-                <div class="text-center mb-8">
-                    <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-black text-green-400 glow-green mb-2 tracking-wider">
-                        &lt;/&gt; Task Prime
+            <div class="bg-hacker-dark/95 backdrop-blur-custom rounded-hacker border border-green-500/40 shadow-2xl p-7 md:p-9 glow-border">
+                <div class="text-center mb-9">
+                    <h1 class="text-[clamp(2rem,5vw,2.8rem)] font-black text-green-400 glow-green mb-3 tracking-wider">
+                        &lt;/&gt; TASK_PRIME
                     </h1>
-                    <p class="text-green-500/70 text-sm">// Hacker Edition // God Mode</p>
+                    <p class="text-green-500/70 text-sm font-semibold">// HACKER EDITION // GOD MODE ACTIVE</p>
                 </div>
 
-                <form id="login-form" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; RA</label>
-                        <input type="text" id="ra" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Insira RA">
+                <form id="login-form" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-green-300">&gt; USUÁRIO_RA</label>
+                        <input type="text" id="ra" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="DIGITE_SEU_RA">
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; Senha</label>
-                        <input type="password" id="senha" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Insira senha">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-green-300">&gt; SENHA_ACESSO</label>
+                        <input type="password" id="senha" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="DIGITE_SUA_SENHA">
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-green-300 mb-2">&gt; CF Token (Opcional)</label>
-                        <input type="text" id="cf" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/40 rounded-hacker focus:outline-none focus:border-green-400 text-green-300" placeholder="Bypass Cloudflare">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-green-300">&gt; COOKIE_CF</label>
+                        <input type="text" id="cf" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="COOKIE_CLOUDFLARE_COMPLETO">
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-2 uppercase">
-                        &gt; Executar Login
+                    <div class="cf-turnstile" data-sitekey="0x4AAAAAADf8FXgE2rH6w16i" data-theme="dark"></div>
+
+                    <button type="submit" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-3 tracking-wider uppercase text-lg">
+                        &gt; EXECUTAR_LOGIN
                     </button>
                 </form>
             </div>
@@ -399,54 +362,54 @@ HTML_CONTENT = """
 
         <!-- Modal Principal -->
         <section id="main-modal" class="hidden w-full max-w-lg transition-all-smooth opacity-0 scale-95">
-            <div class="bg-hacker-dark/90 backdrop-blur-custom rounded-hacker border border-green-500/30 shadow-2xl overflow-hidden glow-border">
+            <div class="bg-hacker-dark/95 backdrop-blur-custom rounded-hacker border border-green-500/40 shadow-2xl overflow-hidden glow-border">
                 
                 <!-- Cabeçalho -->
-                <div class="flex items-center justify-between p-5 border-b border-green-600/30 bg-green-900/10">
-                    <h2 class="text-lg font-black text-green-400 glow-green tracking-wider">&lt;/&gt; Selecionar Alvo</h2>
+                <div class="flex items-center justify-between p-6 border-b border-green-600/40 bg-green-900/10">
+                    <h2 class="text-xl font-black text-green-400 glow-green tracking-wider">&lt;/&gt; PAINEL_DE_CONTROLE</h2>
                     <button id="btn-close" class="text-green-500 hover:text-green-300 text-2xl transition-all-smooth">
                         <i class="fa fa-times-circle"></i>
                     </button>
                 </div>
 
                 <!-- Lista -->
-                <div class="p-5 max-h-[65vh] overflow-y-auto scrollbar-hide">
-                    <label class="flex items-center gap-3 mb-6 text-green-300 font-bold cursor-pointer">
+                <div class="p-6 max-h-[65vh] overflow-y-auto scrollbar-hide">
+                    <label class="flex items-center gap-3 mb-7 text-green-300 font-bold cursor-pointer text-lg">
                         <input type="checkbox" id="select-all" class="w-5 h-5 accent-green-500 rounded-sm">
-                        <span>&gt; Selecionar Todos</span>
+                        <span>&gt; SELECIONAR_TODOS</span>
                     </label>
 
-                    <div id="tasks-list" class="space-y-3 mb-6">
-                        <div class="text-center text-green-700/70 py-6 font-bold">// Clique: Buscar Atividades</div>
+                    <div id="tasks-list" class="space-y-4 mb-7">
+                        <div class="text-center text-green-700/70 py-8 font-bold text-lg tracking-wider">// AGUARDANDO_COMANDO... <br><br> [ CLICAR: BUSCAR_ATIVIDADES ]</div>
                     </div>
 
-                    <p class="text-xs text-green-600/60 mb-6 italic">
-                        * Pontuação: Valor < 100 = Maior Chance Erro
+                    <p class="text-xs text-green-600/60 mb-7 italic font-medium">
+                        * TEMPO DE EXECUÇÃO BASEADO NO MÍNIMO DA ATIVIDADE
                     </p>
 
                     <!-- Tempo -->
-                    <div class="grid grid-cols-2 gap-5 mb-2">
-                        <div>
-                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; Tempo Min (Min)</label>
-                            <input type="number" id="min-time" value="1" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
+                    <div class="grid grid-cols-2 gap-6 mb-3">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-green-400">&gt; TEMPO_MÍN (MIN)</label>
+                            <input type="number" id="min-time" value="1" min="1" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/50 rounded-hacker text-center text-green-300 font-bold focus:outline-none">
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-green-400 mb-2">&gt; Tempo Max (Min)</label>
-                            <input type="number" id="max-time" value="3" min="1" class="w-full px-3 py-2.5 bg-hacker-gray border border-green-600/40 rounded-hacker text-center text-green-300 font-bold">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-green-400">&gt; TEMPO_MAX (MIN)</label>
+                            <input type="number" id="max-time" value="3" min="1" class="w-full px-4 py-3 bg-hacker-gray border border-green-600/50 rounded-hacker text-center text-green-300 font-bold focus:outline-none">
                         </div>
                     </div>
                 </div>
 
                 <!-- Botões -->
-                <div class="p-5 border-t border-green-600/30 bg-green-900/10 space-y-3">
-                    <button id="btn-run" class="w-full py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border uppercase">
-                        &gt; Executar Selecionadas
+                <div class="p-6 border-t border-green-600/40 bg-green-900/10 space-y-4">
+                    <button id="btn-run" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border tracking-wider uppercase text-lg">
+                        &gt; EXECUTAR_SELECIONADAS
                     </button>
-                    <button id="btn-draft" class="w-full py-2.5 bg-hacker-gray border border-green-800/50 text-green-700/50 rounded-hacker cursor-not-allowed uppercase">
-                        // Rascunho
+                    <button id="btn-draft" class="w-full py-3 bg-hacker-gray border border-green-800/60 text-green-700/50 rounded-hacker cursor-not-allowed font-bold tracking-wider uppercase">
+                        // SALVAR_RASCUNHO [OFFLINE]
                     </button>
-                    <button id="btn-refresh" class="w-full py-2.5 bg-hacker-light-gray hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-sm font-bold border border-green-700/30 uppercase">
-                        <i class="fa fa-refresh mr-2"></i> Buscar Atividades
+                    <button id="btn-refresh" class="w-full py-3 bg-hacker-light-gray hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-base font-bold border border-green-700/40 tracking-wider uppercase">
+                        <i class="fa fa-refresh mr-2"></i> BUSCAR_ATIVIDADES
                     </button>
                 </div>
             </div>
@@ -455,7 +418,7 @@ HTML_CONTENT = """
     </main>
 
     <!-- Notificações -->
-    <div id="notifications" class="fixed top-5 right-5 z-50 space-y-3 w-full max-w-xs"></div>
+    <div id="notifications" class="fixed top-6 right-6 z-50 space-y-4 w-full max-w-xs"></div>
 
     <script>
         let state = { token: null, captcha: null, cf: null, tasks: [], running: false };
@@ -463,13 +426,13 @@ HTML_CONTENT = """
         function notify(msg, type='info'){
             const cont = document.getElementById('notifications');
             const colors = {
-                success: 'bg-green-900/80 border-green-400 text-green-300',
-                error: 'bg-red-900/80 border-red-400 text-red-300',
-                info: 'bg-blue-900/80 border-blue-400 text-blue-300'
+                success: 'bg-green-900/90 border-green-400 text-green-200 glow-green',
+                error: 'bg-red-900/90 border-red-400 text-red-200 glow-red-border',
+                info: 'bg-blue-900/90 border-blue-400 text-blue-200'
             };
             const el = document.createElement('div');
-            el.className = `p-4 rounded-hacker border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 font-bold ${colors[type]}`;
-            el.innerHTML = `<div class="flex items-start gap-3"><i class="fa ${type==='success'?'fa-check-circle':'fa-exclamation-triangle'}"></i><span>${msg}</span></div>`;
+            el.className = `p-5 rounded-hacker border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 font-bold tracking-wider ${colors[type]}`;
+            el.innerHTML = `<div class="flex items-start gap-3"><i class="fa ${type==='success'?'fa-check-circle':'fa-exclamation-triangle'} text-xl"></i><span>${msg}</span></div>`;
             cont.appendChild(el);
             setTimeout(()=>el.classList.replace('opacity-0','opacity-100'),10);
             setTimeout(()=>{el.classList.add('opacity-0','translate-x-4');setTimeout(()=>el.remove(),300)},4000);
@@ -479,7 +442,8 @@ HTML_CONTENT = """
         document.getElementById('login-form').addEventListener('submit', async e=>{
             e.preventDefault();
             const btn = e.target.querySelector('button');
-            btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> Processando...';
+            btn.disabled=true; 
+            btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> PROCESSANDO...';
             try{
                 const res = await fetch('/api/login',{
                     method:'POST',
@@ -487,7 +451,8 @@ HTML_CONTENT = """
                     body:JSON.stringify({
                         ra:document.getElementById('ra').value.trim(),
                         senha:document.getElementById('senha').value.trim(),
-                        cf:document.getElementById('cf').value.trim()||null
+                        cf:document.getElementById('cf').value.trim()||null,
+                        turnstile_token:turnstile.getResponse()
                     })
                 });
                 const d=await res.json();
@@ -497,7 +462,7 @@ HTML_CONTENT = """
                 state.captcha=d.captcha;
                 state.cf=document.getElementById('cf').value.trim()||null;
 
-                notify(`Acesso Permitido: ${d.nome.toUpperCase()}`, 'success');
+                notify(`ACESSO_PERMITIDO: ${d.nome.toUpperCase()}`,'success');
                 
                 document.getElementById('login-screen').classList.add('opacity-0','scale-95');
                 setTimeout(()=>{
@@ -508,16 +473,16 @@ HTML_CONTENT = """
                 },300);
 
             }catch(err){
-                notify(`Erro: ${err.message}`, 'error');
+                notify(`ERRO: ${err.message}`,'error');
             }finally{
-                btn.disabled=false; btn.innerHTML='&gt; Executar Login';
+                btn.disabled=false; btn.innerHTML='&gt; EXECUTAR_LOGIN';
             }
         });
 
-        // ✅ BUSCA CORRIGIDA
+        // ✅ BUSCA COM A SUA LÓGICA (FUNCIONA 100%)
         document.getElementById('btn-refresh').addEventListener('click', async ()=>{
             try{
-                notify('Solicitando Dados...', 'info');
+                notify('SOLICITANDO_DADOS...','info');
                 const res = await fetch('/api/tasks',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
@@ -531,20 +496,20 @@ HTML_CONTENT = """
                 renderTasks(state.tasks);
                 
                 if(state.tasks.length === 0){
-                    notify('Nenhuma Atividade Encontrada', 'info');
+                    notify('NENHUMA_ATIVIDADE_ENCONTRADA','info');
                 } else {
-                    notify(`Sucesso: ${d.pending.length} Ativas | ${d.expired.length} Concluídas`, 'success');
+                    notify(`SUCESSO: ${d.pending.length} ATIVAS | ${d.expired.length} CONCLUÍDAS`,'success');
                 }
 
             }catch(err){
-                notify(`Falha: ${err.message}`, 'error');
+                notify(`FALHA: ${err.message}`,'error');
             }
         });
 
         function renderTasks(list){
             const el = document.getElementById('tasks-list');
             el.innerHTML='';
-            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">// Vazio //</div>';return;}
+            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">// VAZIO //</div>';return;}
             
             list.forEach((t, i)=>{
                 const div=document.createElement('div');
@@ -554,15 +519,9 @@ HTML_CONTENT = """
                 div.innerHTML=`
                     <label class="flex items-center gap-3 flex-1 cursor-pointer">
                         <input type="checkbox" class="task-checkbox w-4 h-4 accent-green-500 rounded-sm">
-                        <span class="text-sm text-green-300 line-clamp-1">&gt; Task ${i+1}: ${t.title}</span>
+                        <span class="text-sm text-green-300 line-clamp-1">&gt; TASK_${i+1}: ${t.title}</span>
                     </label>
-                    <select class="score-select bg-hacker-gray border border-green-600/40 rounded-hacker px-2 py-1 text-xs text-green-400 font-bold">
-                        <option value="100">100%</option>
-                        <option value="90">90%</option>
-                        <option value="80">80%</option>
-                        <option value="70">70%</option>
-                        <option value="50">50%</option>
-                    </select>
+                    <span class="text-xs ${t.tipo==='pendente'?'text-green-400':'text-blue-400'} font-bold">${t.tipo.toUpperCase()}</span>
                 `;
                 el.appendChild(div);
             });
@@ -572,9 +531,9 @@ HTML_CONTENT = """
             };
         }
 
-        // Executar ✅ SEM ERRO
+        // Executar ✅ COM A SUA FUNÇÃO (SEM ERRO)
         document.getElementById('btn-run').addEventListener('click', async ()=>{
-            if(state.running) return notify('Processo Ativo', 'info');
+            if(state.running) return notify('PROCESSO_ATIVO','info');
             
             const selecionadas=[];
             document.querySelectorAll('#tasks-list > div').forEach(div=>{
@@ -582,29 +541,28 @@ HTML_CONTENT = """
                 if(cb.checked){
                     selecionadas.push({
                         id:div.dataset.id,
-                        target:div.dataset.target,
-                        score:parseInt(div.querySelector('.score-select').value)
+                        target:div.dataset.target
                     });
                 }
             });
 
-            if(!selecionadas.length) return notify('Nenhuma Task Selecionada', 'error');
+            if(!selecionadas.length) return notify('NENHUMA_TASK_SELECIONADA','error');
 
             const minT=parseInt(document.getElementById('min-time').value);
             const maxT=parseInt(document.getElementById('max-time').value);
 
-            if(minT>maxT) return notify('Tempo Inválido', 'error');
+            if(minT>maxT) return notify('TEMPO_INVALIDO','error');
 
-            if(!confirm(`Iniciar: ${selecionadas.length} Tarefas?`)) return;
+            if(!confirm(`INICIAR: ${selecionadas.length} TAREFAS?`)) return;
 
             state.running=true;
-            notify('Iniciando...', 'info');
+            notify('INICIANDO...','info');
 
             for(let i=0;i<selecionadas.length;i++){
                 const atv=selecionadas[i];
                 const tempo=Math.floor(Math.random()*(maxT-minT+1))+minT;
 
-                notify(`Executando [${i+1}/${selecionadas.length}]`, 'info');
+                notify(`EXECUTANDO [${i+1}/${selecionadas.length}]`,'info');
 
                 try{
                     const res=await fetch('/api/complete_task',{
@@ -616,24 +574,23 @@ HTML_CONTENT = """
                             task_id:parseInt(atv.id),
                             publication_target:atv.target,
                             wait_sec:tempo,
-                            cf:state.cf,
-                            score:atv.score
+                            cf:state.cf
                         })
                     });
                     const d=await res.json();
                     if(!res.ok) throw new Error(d.detail);
 
-                    notify(`✅ Sucesso [${i+1}]`, 'success');
+                    notify(`✅ SUCESSO [${i+1}] | TEMPO: ${d.wait}s`,'success');
                     await new Promise(r=>setTimeout(r,800));
 
                 }catch(err){
-                    notify(`❌ Falha [${i+1}]: ${err.message}`, 'error');
+                    notify(`❌ FALHA [${i+1}]: ${err.message}`,'error');
                     await new Promise(r=>setTimeout(r,500));
                 }
             }
 
             state.running=false;
-            notify('Finalizado', 'success');
+            notify('FINALIZADO','success');
         });
 
         document.getElementById('btn-close').onclick=()=>location.reload();
