@@ -332,10 +332,10 @@ HTML_CONTENT = """
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-cinza-claro">Senha</label>
-                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Senha>
+                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Senha">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-cinza-claro">COOKIE(OPCIONAL)</label>
+                        <label class="block text-sm font-bold text-cinza-claro">Cookie (opcional) porém melhor o uso </label>
                         <input type="text" id="cf" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="opcional">
                     </div>
 
