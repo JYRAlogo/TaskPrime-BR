@@ -328,11 +328,11 @@ HTML_CONTENT = """
                 <form id="login-form" class="space-y-6">
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-cinza-claro">Ra</label>
-                        <input type="text" id="ra" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder=Ra + Dígito + UF">
+                        <input type="text" id="RA" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Ra + Dígito + UF">
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-cinza-claro">Senha</label>
-                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Senha">
+                        <input type="password" id="SENHA" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Senha">
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-cinza-claro">Cookie (opcional) porém melhor o uso </label>
