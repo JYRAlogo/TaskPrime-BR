@@ -327,20 +327,20 @@ HTML_CONTENT = """
 
                 <form id="login-form" class="space-y-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-cinza-claro">USUARIO RA</label>
-                        <input type="text" id="ra" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="DIGITE SEU RA">
+                        <label class="block text-sm font-bold text-cinza-claro">Ra</label>
+                        <input type="text" id="ra" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder=Ra + Dígito + UF">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-cinza-claro">SENHA ACESSO</label>
-                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="DIGITE SUA SENHA">
+                        <label class="block text-sm font-bold text-cinza-claro">Senha</label>
+                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="Senha>
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-cinza-claro">COOKIE CF (OPCIONAL)</label>
-                        <input type="text" id="cf" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="SE QUISER COLOCAR">
+                        <label class="block text-sm font-bold text-cinza-claro">COOKIE(OPCIONAL)</label>
+                        <input type="text" id="cf" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="opcional">
                     </div>
 
                     <button type="submit" class="w-full py-4 bg-preto-cinza hover:bg-cinza-medio text-branco font-black rounded-hacker transition-all-smooth mt-3 tracking-wider uppercase text-lg border border-cinza-medio/50">
-                        EXECUTAR LOGIN
+                        Logar
                     </button>
                 </form>
             </div>
