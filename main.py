@@ -136,7 +136,7 @@ def do_login(ra, senha, cf=None):
         time.sleep(2)
     raise Exception('Falha ao trocar token após 5 tentativas')
 
-# ✅ FUNÇÃO DE BUSCA = EXATAMENTE A QUE VOCÊ ME MANDOU (FUNCIONA 100%)
+# ✅ SUA FUNÇÃO DE BUSCA ORIGINAL
 def do_get_tasks(token, captcha, cf=None):
     cookies = {'cf_clearance': cf} if cf else {}
     s, d = req(f'{BASE}/p/https://edusp-api.ip.tv/room/user',
@@ -169,7 +169,7 @@ def do_get_tasks(token, captcha, cf=None):
             'expired': fmt(fetch(True),  'expirada'),
             'captcha': captcha}
 
-# ✅ FUNÇÃO DE FINALIZAÇÃO = EXATAMENTE A QUE VOCÊ ME MANDOU (SEM ERRO 404)
+# ✅ SUA FUNÇÃO DE FINALIZAÇÃO ORIGINAL
 def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=None, draft=False):
     cookies = {'cf_clearance': cf} if cf else {}
     cap = solve_captcha(cookies)
@@ -199,12 +199,11 @@ def do_complete_task(token, captcha, task_id, publication_target, wait_sec, cf=N
         return {'success': True, 'wait': wait, 'draft': draft}
     raise Exception(f'complete falhou {s2}: {res.get("message") or res.get("error") or res}')
 
-# ─── MODELS ──────────────────────────────────────────────────────────────────
+# ─── MODELS SEM CLOUDFLARE ───────────────────────────────────────────────────
 class LoginBody(BaseModel):
     ra: str
     senha: str
     cf: Optional[str] = None
-    turnstile_token: Optional[str] = None
 
 class TasksBody(BaseModel):
     token: str
@@ -220,32 +219,9 @@ class CompleteBody(BaseModel):
     cf: Optional[str] = None
     draft: bool = False
 
-# ─── ROTAS + CLOUDFLARE CHECK (COMO VOCÊ QUER) ───────────────────────────────
-TURNSTILE_SECRET = "0x4AAAAAADf8FX1DAuHNy6M-3rohj2wvMvw"
-
-def verify_turnstile(token):
-    if not token:
-        return False
-    try:
-        data = json.dumps({"secret": TURNSTILE_SECRET, "response": token}).encode()
-        r = urllib.request.Request(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with urllib.request.urlopen(r, context=ctx, timeout=10) as res:
-            result = json.loads(res.read())
-            return result.get("success", False)
-    except:
-        return False
-
+# ─── ROTAS SEM VERIFICAÇÃO CLOUDFLARE ───────────────────────────────────────
 @app.post('/api/login')
 def api_login(body: LoginBody):
-    if not body.cf or len(body.cf.strip()) < 50:
-        raise HTTPException(status_code=401, detail='RA ou senha inválidos')
-    if not verify_turnstile(body.turnstile_token):
-        raise HTTPException(status_code=403, detail='Verificação Cloudflare falhou. Recarregue a página.')
     try:
         return do_login(body.ra, body.senha, body.cf)
     except Exception as e:
@@ -266,7 +242,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND: ESTILO HACKER GOD + </> + BORDAS REDONDAS + TUDO PRETO ───────
+# ─── FRONTEND SEM CLOUDFLARE, MESMO ESTILO HACKER ───────────────────────────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -319,7 +295,6 @@ HTML_CONTENT = """
             .glow-red-border { box-shadow: 0 0 15px #FF000025; }
         }
     </style>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body class="bg-hacker-black text-green-400 font-mono min-h-screen flex flex-col overflow-x-hidden selection:bg-green-500 selection:text-black">
     <div class="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#001a00_0%,_#000000_80%)]"></div>
@@ -347,11 +322,9 @@ HTML_CONTENT = """
                         <input type="password" id="senha" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="DIGITE_SUA_SENHA">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">&gt; COOKIE_CF</label>
-                        <input type="text" id="cf" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="COOKIE_CLOUDFLARE_COMPLETO">
+                        <label class="block text-sm font-bold text-green-300">&gt; COOKIE_CF (OPCIONAL)</label>
+                        <input type="text" id="cf" class="w-full px-5 py-4 bg-hacker-gray border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="SE_QUISER_COLOCAR">
                     </div>
-
-                    <div class="cf-turnstile" data-sitekey="0x4AAAAAADf8FXgE2rH6w16i" data-theme="dark"></div>
 
                     <button type="submit" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-3 tracking-wider uppercase text-lg">
                         &gt; EXECUTAR_LOGIN
@@ -438,7 +411,7 @@ HTML_CONTENT = """
             setTimeout(()=>{el.classList.add('opacity-0','translate-x-4');setTimeout(()=>el.remove(),300)},4000);
         }
 
-        // Login
+        // Login SEM CLOUDFLARE
         document.getElementById('login-form').addEventListener('submit', async e=>{
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -451,8 +424,7 @@ HTML_CONTENT = """
                     body:JSON.stringify({
                         ra:document.getElementById('ra').value.trim(),
                         senha:document.getElementById('senha').value.trim(),
-                        cf:document.getElementById('cf').value.trim()||null,
-                        turnstile_token:turnstile.getResponse()
+                        cf:document.getElementById('cf').value.trim()||null
                     })
                 });
                 const d=await res.json();
@@ -479,7 +451,7 @@ HTML_CONTENT = """
             }
         });
 
-        // ✅ BUSCA COM A SUA LÓGICA (FUNCIONA 100%)
+        // Buscar tarefas
         document.getElementById('btn-refresh').addEventListener('click', async ()=>{
             try{
                 notify('SOLICITANDO_DADOS...','info');
@@ -531,7 +503,7 @@ HTML_CONTENT = """
             };
         }
 
-        // Executar ✅ COM A SUA FUNÇÃO (SEM ERRO)
+        // Executar
         document.getElementById('btn-run').addEventListener('click', async ()=>{
             if(state.running) return notify('PROCESSO_ATIVO','info');
             
