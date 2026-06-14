@@ -242,7 +242,7 @@ def api_complete(body: CompleteBody):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ─── FRONTEND: TUDO PRETO, SEM UNDERLINES, CRÉDITOS ROXOS + DISCORD ───────
+# ─── FRONTEND: TUDO PRETO, SEM VERDE, SEM UNDERLINES, LINK ILUSÃO ───────
 @app.get('/', response_class=HTMLResponse)
 def index():
     return HTML_CONTENT
@@ -265,13 +265,14 @@ HTML_CONTENT = """
             theme: {
                 extend: {
                     colors: {
-                        'hacker-black': '#000000',
-                        'hacker-dark': '#050505',
-                        'hacker-gray': '#101010',
-                        'hacker-light-gray': '#1A1A1A',
-                        'hacker-green': '#00FF00',
-                        'hacker-purple': '#9933FF',
-                        'hacker-purple-bright': '#BB66FF',
+                        'preto': '#000000',
+                        'preto-escuro': '#050505',
+                        'preto-cinza': '#101010',
+                        'roxo-hackers': '#9933FF',
+                        'roxo-brilhante': '#BB66FF',
+                        'cinza-claro': '#CCCCCC',
+                        'cinza-medio': '#888888',
+                        'branco': '#FFFFFF',
                     },
                     fontFamily: {
                         mono: ['JetBrains Mono', 'monospace'],
@@ -290,58 +291,55 @@ HTML_CONTENT = """
             .scrollbar-hide::-webkit-scrollbar { display: none; }
             .backdrop-blur-custom { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
             .transition-all-smooth { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-            .glow-green { text-shadow: 0 0 10px #00FF00; }
-            .glow-purple { text-shadow: 0 0 12px #9933FF; }
-            .glow-border { box-shadow: 0 0 15px #00FF0025; }
-            .glow-purple-border { box-shadow: 0 0 15px #9933FF30; }
-            /* TIRAR TODOS OS UNDERLINES DE LINKS E TEXTOS */
-            a, a:hover, a:focus, a:active { text-decoration: none !important; outline: none !important; }
-            * { text-decoration: none !important; }
+            .glow-roxo { text-shadow: 0 0 12px #9933FF; }
+            .glow-roxo-borda { box-shadow: 0 0 15px #9933FF30; }
+            /* TIRAR TODOS OS UNDERLINES DE QUALQUER COISA */
+            a, a:hover, a:focus, a:active, * { text-decoration: none !important; outline: none !important; }
         }
     </style>
 </head>
-<body class="bg-black text-green-400 font-mono min-h-screen flex flex-col overflow-x-hidden selection:bg-hacker-purple selection:text-black">
-    <div class="fixed inset-0 z-0 bg-black"></div>
+<body class="bg-preto text-cinza-claro font-mono min-h-screen flex flex-col overflow-x-hidden selection:bg-roxo-hackers selection:text-preto">
+    <div class="fixed inset-0 z-0 bg-preto"></div>
     <div class="fixed inset-0 z-0 opacity-3 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
     <main class="relative z-10 w-full min-h-screen flex items-center justify-center p-4">
         
         <!-- Login -->
         <section id="login-screen" class="w-full max-w-md transition-all-smooth opacity-100 scale-100">
-            <div class="bg-black/95 backdrop-blur-custom rounded-hacker border border-green-500/40 shadow-2xl p-7 md:p-9 glow-border">
+            <div class="bg-preto/95 backdrop-blur-custom rounded-hacker border border-cinza-medio/40 shadow-2xl p-7 md:p-9">
                 <div class="text-center mb-6">
-                    <h1 class="text-[clamp(2rem,5vw,2.8rem)] font-black text-green-400 glow-green mb-2 tracking-wider">
+                    <h1 class="text-[clamp(2rem,5vw,2.8rem)] font-black text-branco mb-2 tracking-wider">
                         &lt;/&gt; TASK_PRIME
                     </h1>
                     
-                    <!-- SEUS CRÉDITOS EM ROXO / COLORIDO -->
+                    <!-- SEUS CRÉDITOS EM ROXO | LINK ILUSÃO -->
                     <div class="mt-2 mb-4">
-                        <p class="text-hacker-purple-bright font-bold text-sm glow-purple tracking-wider">
-                            DESENVOLVIDO POR: HACKERS LEGION
+                        <p class="text-roxo-brilhante font-bold text-sm glow-roxo tracking-wider">
+                            Desenvolvido por: !richardzs | Hackers Legion | Founder
                         </p>
-                        <a href="https://discord.gg/hackerslegion" target="_blank" class="inline-block mt-1 px-4 py-1 bg-hacker-purple/20 border border-hacker-purple/50 rounded-full text-hacker-purple-bright hover:bg-hacker-purple/40 transition-all-smooth text-xs font-bold glow-purple">
-                            <i class="fa fa-discord mr-1"></i> DISCORD: HACKERS LEGION
+                        <a href="https://discord.gg/QhUS4tnnMN" target="_blank" class="inline-block mt-1 px-4 py-1 bg-roxo-hackers/20 border border-roxo-hackers/50 rounded-full text-roxo-brilhante hover:bg-roxo-hackers/40 transition-all-smooth text-xs font-bold glow-roxo">
+                            <i class="fa fa-discord mr-1"></i> discord.gg/hackerslegion
                         </a>
                     </div>
 
-                    <p class="text-green-500/70 text-sm font-semibold">// AUTOMAÇÃO SALA DO FUTURO //</p>
+                    <p class="text-cinza-medio/70 text-sm font-semibold">AUTOMAÇÃO SALA DO FUTURO</p>
                 </div>
 
                 <form id="login-form" class="space-y-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">USUARIO RA</label>
-                        <input type="text" id="ra" class="w-full px-5 py-4 bg-black border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="DIGITE SEU RA">
+                        <label class="block text-sm font-bold text-cinza-claro">USUARIO RA</label>
+                        <input type="text" id="ra" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="DIGITE SEU RA">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">SENHA ACESSO</label>
-                        <input type="password" id="senha" class="w-full px-5 py-4 bg-black border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="DIGITE SUA SENHA">
+                        <label class="block text-sm font-bold text-cinza-claro">SENHA ACESSO</label>
+                        <input type="password" id="senha" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="DIGITE SUA SENHA">
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-green-300">COOKIE CF (OPCIONAL)</label>
-                        <input type="text" id="cf" class="w-full px-5 py-4 bg-black border border-green-600/50 rounded-hacker focus:outline-none focus:border-green-400 text-green-300 placeholder:text-green-700/60 transition-all-smooth" placeholder="SE QUISER COLOCAR">
+                        <label class="block text-sm font-bold text-cinza-claro">COOKIE CF (OPCIONAL)</label>
+                        <input type="text" id="cf" class="w-full px-5 py-4 bg-preto border border-cinza-medio/50 rounded-hacker focus:outline-none focus:border-branco text-cinza-claro placeholder:text-cinza-medio/60 transition-all-smooth" placeholder="SE QUISER COLOCAR">
                     </div>
 
-                    <button type="submit" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border mt-3 tracking-wider uppercase text-lg">
+                    <button type="submit" class="w-full py-4 bg-preto-cinza hover:bg-cinza-medio text-branco font-black rounded-hacker transition-all-smooth mt-3 tracking-wider uppercase text-lg border border-cinza-medio/50">
                         EXECUTAR LOGIN
                     </button>
                 </form>
@@ -350,63 +348,63 @@ HTML_CONTENT = """
 
         <!-- Modal Principal -->
         <section id="main-modal" class="hidden w-full max-w-lg transition-all-smooth opacity-0 scale-95">
-            <div class="bg-black/95 backdrop-blur-custom rounded-hacker border border-green-500/40 shadow-2xl overflow-hidden glow-border">
+            <div class="bg-preto/95 backdrop-blur-custom rounded-hacker border border-cinza-medio/40 shadow-2xl overflow-hidden">
                 
                 <!-- Cabeçalho -->
-                <div class="flex items-center justify-between p-6 border-b border-green-600/40 bg-green-900/10">
+                <div class="flex items-center justify-between p-6 border-b border-cinza-medio/40 bg-preto-cinza/10">
                     <div>
-                        <h2 class="text-xl font-black text-green-400 glow-green tracking-wider">PAINEL DE CONTROLE</h2>
-                        <p class="text-hacker-purple-bright text-xs font-bold glow-purple mt-1">HACKERS LEGION</p>
+                        <h2 class="text-xl font-black text-branco tracking-wider">PAINEL DE CONTROLE</h2>
+                        <p class="text-roxo-brilhante text-xs font-bold glow-roxo mt-1">Hackers Legion</p>
                     </div>
-                    <button id="btn-close" class="text-green-500 hover:text-green-300 text-2xl transition-all-smooth">
+                    <button id="btn-close" class="text-cinza-medio hover:text-cinza-claro text-2xl transition-all-smooth">
                         <i class="fa fa-times-circle"></i>
                     </button>
                 </div>
 
                 <!-- Lista -->
-                <div class="p-6 max-h-[65vh] overflow-y-auto scrollbar-hide bg-black">
-                    <label class="flex items-center gap-3 mb-7 text-green-300 font-bold cursor-pointer text-lg">
-                        <input type="checkbox" id="select-all" class="w-5 h-5 accent-green-500 rounded-sm">
+                <div class="p-6 max-h-[65vh] overflow-y-auto scrollbar-hide bg-preto">
+                    <label class="flex items-center gap-3 mb-7 text-cinza-claro font-bold cursor-pointer text-lg">
+                        <input type="checkbox" id="select-all" class="w-5 h-5 accent-roxo-hackers rounded-sm">
                         <span>SELECIONAR TODOS</span>
                     </label>
 
                     <div id="tasks-list" class="space-y-4 mb-7">
-                        <div class="text-center text-green-700/70 py-8 font-bold text-lg tracking-wider">AGUARDANDO COMANDO... <br><br> [ CLICAR: BUSCAR ATIVIDADES ]</div>
+                        <div class="text-center text-cinza-medio/70 py-8 font-bold text-lg tracking-wider">AGUARDANDO COMANDO... <br><br> [ CLICAR: BUSCAR ATIVIDADES ]</div>
                     </div>
 
-                    <p class="text-xs text-green-600/60 mb-7 italic font-medium">
+                    <p class="text-xs text-cinza-medio/60 mb-7 italic font-medium">
                         * TEMPO DE EXECUÇÃO BASEADO NO MÍNIMO DA ATIVIDADE
                     </p>
 
                     <!-- Tempo -->
                     <div class="grid grid-cols-2 gap-6 mb-3">
                         <div class="space-y-2">
-                            <label class="block text-sm font-bold text-green-400">TEMPO MIN (MIN)</label>
-                            <input type="number" id="min-time" value="1" min="1" class="w-full px-4 py-3 bg-black border border-green-600/50 rounded-hacker text-center text-green-300 font-bold focus:outline-none">
+                            <label class="block text-sm font-bold text-cinza-claro">TEMPO MIN (MIN)</label>
+                            <input type="number" id="min-time" value="1" min="1" class="w-full px-4 py-3 bg-preto border border-cinza-medio/50 rounded-hacker text-center text-cinza-claro font-bold focus:outline-none">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-bold text-green-400">TEMPO MAX (MIN)</label>
-                            <input type="number" id="max-time" value="3" min="1" class="w-full px-4 py-3 bg-black border border-green-600/50 rounded-hacker text-center text-green-300 font-bold focus:outline-none">
+                            <label class="block text-sm font-bold text-cinza-claro">TEMPO MAX (MIN)</label>
+                            <input type="number" id="max-time" value="3" min="1" class="w-full px-4 py-3 bg-preto border border-cinza-medio/50 rounded-hacker text-center text-cinza-claro font-bold focus:outline-none">
                         </div>
                     </div>
                 </div>
 
                 <!-- Botões -->
-                <div class="p-6 border-t border-green-600/40 bg-green-900/10 space-y-4">
-                    <button id="btn-run" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-black rounded-hacker transition-all-smooth glow-border tracking-wider uppercase text-lg">
+                <div class="p-6 border-t border-cinza-medio/40 bg-preto-cinza/10 space-y-4">
+                    <button id="btn-run" class="w-full py-4 bg-preto-cinza hover:bg-cinza-medio text-branco font-black rounded-hacker transition-all-smooth tracking-wider uppercase text-lg border border-cinza-medio/50">
                         EXECUTAR SELECIONADAS
                     </button>
-                    <button id="btn-draft" class="w-full py-3 bg-black border border-green-800/60 text-green-700/50 rounded-hacker cursor-not-allowed font-bold tracking-wider uppercase">
+                    <button id="btn-draft" class="w-full py-3 bg-preto border border-cinza-medio/60 text-cinza-medio/50 rounded-hacker cursor-not-allowed font-bold tracking-wider uppercase">
                         SALVAR RASCUNHO [OFFLINE]
                     </button>
-                    <button id="btn-refresh" class="w-full py-3 bg-black hover:bg-hacker-gray text-green-400 rounded-hacker transition-all-smooth text-base font-bold border border-green-700/40 tracking-wider uppercase">
+                    <button id="btn-refresh" class="w-full py-3 bg-preto hover:bg-preto-cinza text-cinza-claro rounded-hacker transition-all-smooth text-base font-bold border border-cinza-medio/40 tracking-wider uppercase">
                         <i class="fa fa-refresh mr-2"></i> BUSCAR ATIVIDADES
                     </button>
 
-                    <!-- SEUS CRÉDITOS NO RODAPÉ -->
+                    <!-- SEUS CRÉDITOS NO RODAPÉ | LINK ILUSÃO -->
                     <div class="mt-4 text-center">
-                        <a href="https://discord.gg/hackerslegion" target="_blank" class="text-hacker-purple-bright text-sm font-bold glow-purple hover:text-hacker-purple transition-all-smooth">
-                            <i class="fa fa-discord mr-1"></i> DISCORD: HACKERS LEGION
+                        <a href="https://discord.gg/QhUS4tnnMN" target="_blank" class="text-roxo-brilhante text-sm font-bold glow-roxo hover:text-roxo-hackers transition-all-smooth">
+                            <i class="fa fa-discord mr-1"></i> discord.gg/hackerslegion
                         </a>
                     </div>
                 </div>
@@ -424,9 +422,9 @@ HTML_CONTENT = """
         function notify(msg, type='info'){
             const cont = document.getElementById('notifications');
             const colors = {
-                success: 'bg-green-900/90 border-green-400 text-green-200 glow-green',
-                error: 'bg-red-900/90 border-red-400 text-red-200 glow-red-border',
-                info: 'bg-hacker-purple/90 border-hacker-purple text-hacker-purple-bright glow-purple'
+                success: 'bg-preto-cinza/90 border-branco text-branco',
+                error: 'bg-preto-cinza/90 border-cinza-medio text-cinza-claro',
+                info: 'bg-roxo-hackers/90 border-roxo-hackers text-roxo-brilhante glow-roxo'
             };
             const el = document.createElement('div');
             el.className = `p-5 rounded-hacker border backdrop-blur-custom transition-all-smooth translate-x-0 opacity-0 font-bold tracking-wider ${colors[type]}`;
@@ -506,19 +504,19 @@ HTML_CONTENT = """
         function renderTasks(list){
             const el = document.getElementById('tasks-list');
             el.innerHTML='';
-            if(!list.length){el.innerHTML='<div class="text-center text-red-500/70 py-6 font-bold">VAZIO</div>';return;}
+            if(!list.length){el.innerHTML='<div class="text-center text-cinza-medio/70 py-6 font-bold">VAZIO</div>';return;}
             
             list.forEach((t, i)=>{
                 const div=document.createElement('div');
-                div.className='flex items-center justify-between gap-2 p-3 hover:bg-green-900/20 rounded-hacker transition-all-smooth border border-green-800/40 bg-black';
+                div.className='flex items-center justify-between gap-2 p-3 hover:bg-preto-cinza/20 rounded-hacker transition-all-smooth border border-cinza-medio/40 bg-preto';
                 div.dataset.id=t.id;
                 div.dataset.target=t.publication_target;
                 div.innerHTML=`
                     <label class="flex items-center gap-3 flex-1 cursor-pointer">
-                        <input type="checkbox" class="task-checkbox w-4 h-4 accent-green-500 rounded-sm">
-                        <span class="text-sm text-green-300 line-clamp-1">TASK ${i+1}: ${t.title}</span>
+                        <input type="checkbox" class="task-checkbox w-4 h-4 accent-roxo-hackers rounded-sm">
+                        <span class="text-sm text-cinza-claro line-clamp-1">TASK ${i+1}: ${t.title}</span>
                     </label>
-                    <span class="text-xs ${t.tipo==='pendente'?'text-green-400':'text-blue-400'} font-bold">${t.tipo.toUpperCase()}</span>
+                    <span class="text-xs ${t.tipo==='pendente'?'text-branco':'text-cinza-medio'} font-bold">${t.tipo.toUpperCase()}</span>
                 `;
                 el.appendChild(div);
             });
