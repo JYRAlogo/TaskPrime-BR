@@ -254,6 +254,8 @@ HTML_CONTENT = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TaskPrime BR | Hackers Legion</title>
+    <!-- ✅ FAVICON ADICIONADO -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text x='50' y='65' font-family='monospace' font-size='50' text-anchor='middle' fill='%239933FF'>&lt;/&gt;</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -470,7 +472,7 @@ HTML_CONTENT = """
             }catch(err){
                 notify(`ERRO: ${err.message}`,'error');
             }finally{
-                btn.disabled=false; btn.innerHTML='EXECUTAR LOGIN';
+                btn.disabled=false; btn.innerHTML='Logar';
             }
         });
 
